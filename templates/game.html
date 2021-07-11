@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script defer>
+    socket.emit("getPlayerData");
+    socket.emit("joinGameRoom");
+</script>
+<style>
+    pre{
+        font-size: 30pt;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="playerData">
+    Name: <span id="playerName"></span><br>
+    Alias: <span id="playerAlias"></span><br>
+    Role: <span id="playerRole"></span><br>
+    Status: <span id="playerStatus"></span><br>
+</div>
+<input type="text" id ="message"><button onClick="sendMessage()">Send Message</button>
+<pre id = "output"></pre>
+
+{% endblock %}

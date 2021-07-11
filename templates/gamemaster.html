@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="content">
+    <button onClick="getGameData();">Update</button><br>
+    <button onClick="startGame();getGameData();">Start Game</button>
+    <pre id="output"></pre>
+
+    <input type="text" id="message">
+    <button onClick="messagePlayers()">Send to Players</button><br>
+    <button onClick="messageHackers()">Send to Hackers</button><br>
+    <button onClick="messageWhitehats()">Send to White Hats</button><br>
+    <button onClick="messageInvestigators()">Send to Investigators</button><br>
+</div>
+{% endblock %}

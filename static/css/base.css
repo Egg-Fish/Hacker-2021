@@ -1,0 +1,26 @@
+/*
+PALETTE
+BG Colour : #242424
+GUI Colour : #3D3D3D
+Node Colour : #707070
+Red : #FF0000
+Blue : #1E48EF
+
+
+
+*/
+:root
+{
+    --bg-colour: #242424;
+    --gui-colour: #3D3D3D;
+    --node-colour: #707070;
+    --node-red: #FF0000;
+    --node-blue: #1E48EF;
+}
+
+html
+{
+    background-color: var(--bg-colour);
+    font-family: 'Open Sans', sans-serif;
+    color: white;
+}
