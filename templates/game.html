@@ -1,15 +1,7 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<script defer>
-    socket.emit("getPlayerData");
-    socket.emit("joinGameRoom");
-</script>
-<style>
-    pre{
-        font-size: 30pt;
-    }
-</style>
+<link rel="stylesheet" href="{{url_for('static', filename='css/game.css')}}">
 {% endblock %}
 
 {% block content %}
@@ -19,7 +11,27 @@
     Role: <span id="playerRole"></span><br>
     Status: <span id="playerStatus"></span><br>
 </div>
-<input type="text" id ="message"><button onClick="sendMessage()">Send Message</button>
-<pre id = "output"></pre>
+<div id="chatbox">
+    <div id = "output"></div>
+</div>
+
+<div id="inputField">
+    <input type="text" id="message"><button onClick="sendMessage()">Send Message</button>
+</div>
+
+<script defer>
+    socket.emit("getPlayerData");
+    socket.emit("joinGameRoom");
+
+    document.getElementById("message").addEventListener("keyup", function(event) {
+    // Number 13 is the "Enter" key on the keyboard
+    if (event.key === "Enter") {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Trigger the button element with a click
+        sendMessage();
+        }
+    });
+</script>
 
 {% endblock %}

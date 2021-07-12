@@ -1,0 +1,40 @@
+pre{
+    font-size: 14pt;
+}
+
+#chatbox{
+    height: 90%;
+    margin: auto;
+    width: 50%;
+    border: 3px solid green;
+}
+
+#output{
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#inputField{
+    position: fixed;
+    left: 50%;
+    margin-left: -450px;
+    bottom: 0px;
+    width: 900px;
+    height: 60px;
+}
+
+#message{
+    width: 75%;
+    height: 100%;
+}
+
+button{
+    width: 25%;
+    height: 100%;
+}
+
+#playerData{
+    position: fixed;
+    top: 100px;
+    left: 100px;
+}
