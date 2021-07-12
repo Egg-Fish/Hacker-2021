@@ -241,6 +241,9 @@ def sendMessage(data):
         return
 
     else: # Player is in turn
+        if not message or len(message) > 500:
+            return
+        
         if message[0] == "/": # Is a command
             m = message.split()
             command = m[0]
