@@ -298,7 +298,12 @@ class GameInstance:
     # Returns 0 if self.victims is empty (The white hats 
     # have successfully protected the civilians)
     def endNight(self):
-        pass
+        if len(self.victims) == 0:
+            return 0
+        else:
+            finalVictim = random.choice(self.victims)
+
+            return finalVictim
 
     
 
