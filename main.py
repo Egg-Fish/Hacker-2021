@@ -7,7 +7,7 @@ from flask import Flask, send_file, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from flask import render_template, request, redirect, session
 
-from game_logic import GameInstance, create_player, GAMES
+from game_logic_r import GameInstance, create_player, GAMES
 
 NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims"}
 NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /target <alias> to target a victim."}
@@ -42,15 +42,27 @@ GAMES.update({"oriontestgame": oriontestgame})
 
 dummygame = GameInstance("dummygame")
 
-dummyplayer = create_player("dummy")
-dummygame.add_player(dummyplayer)
+dummyplayer1 = create_player("dummy1")
+dummygame.add_player(dummyplayer1)
+
+dummyplayer2 = create_player("dummy2")
+dummygame.add_player(dummyplayer2)
+
+dummyplayer3 = create_player("dummy3")
+dummygame.add_player(dummyplayer3)
+
+dummyplayer4 = create_player("dummy4")
+dummygame.add_player(dummyplayer4)
+
+dummygame.startGame()
+dummygame.startHackers()
 
 GAMES.update({"dummygame": dummygame})
 
 @app.route("/test/<path>")
 def test(path):
     dummygame.startGame()
-    session["name"] = "dummy"
+    session["name"] = "dummy1"
     session["gamecode"] = "dummygame"
     session["role"] = "hacker"
     session["alias"] = "sussybaka"
@@ -261,7 +273,7 @@ def sendMessage(data):
 
             elif command == "/scan":
                 result = game.investigateAlias(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"The player is a {result}"})
+                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
 
             else:
                 emit("message", {"sender": "SYSTEM", "message": f"COMMAND NOT FOUND"})

@@ -161,8 +161,6 @@ class GameInstance:
     player entry will be overriden.
     """
     def add_player(self, player:dict):
-
-
         player["alias"] = random.choice(RANDOM_NAMES)
 
         aliases = [self.players[x]["alias"] for x in self.players]
