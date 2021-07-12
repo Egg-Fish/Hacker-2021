@@ -77,3 +77,20 @@ socket.on("message", function(data){
 
     document.getElementById("output").innerText += sender + ": " + message + "\n";
 });
+
+
+function startHackers(){
+    socket.emit("startHackers");
+}
+
+function startWhitehats(){
+    socket.emit("startWhitehats");
+}
+
+function startInvestigators(){
+    socket.emit("startInvestigators");
+}
+
+function startCivilians(){
+    socket.emit("startCivilians");
+}

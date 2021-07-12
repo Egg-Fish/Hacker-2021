@@ -12,15 +12,6 @@ GAMES = {}
 GAME_STATUS = ["Waiting for game to start", "Game is running", "Game has ended"]
 ROUND_STATUS = ["Nighttime: Hackers are voting", "Nighttime: White Hats are voting", "Nighttime: Investigators are voting", "Daytime: Everyone is awake"]
 
-NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims"}
-NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /target <alias> to target a victim."}
-NIGHT_START_MESSAGE_WHITEHATS = {"sender": "SYSTEM", "message": "You are a White Hat. Do /protect <alias> to protect a person from being hacked. Can only be used once per round per white hat."}
-NIGHT_START_MESSAGE_INVESTIGATOR = {"sender": "SYSTEM", "message": "You are the one and only Invesigator. Do /scan <alias> to reveal the role of a person. Can only be used once per round."}
-
-NIGHT_END_HACKERS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The hackers have chosen their victims."}
-NIGHT_END_WHITEHATS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The white hats have chosen who to protect."}
-NIGHT_END_INVESTIGATOR_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The investigator has revealed the role of a person."}
-
 """
 Class GameInstance:
     This class will contain the game states of a single game played among
@@ -251,32 +242,20 @@ class GameInstance:
 
     def startHackers(self):
         self.roundStatus = 0 # Hackers' turn to speak
-
         self.victims.clear()
 
-        socket.emit("message", NIGHT_START_MESSAGE_ALL, to=self.gamecode)
-        socket.emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{self.gamecode}/hacker")
 
     def startWhitehats(self):
         self.roundStatus = 1 # White Hats' turn to speak
-        self.hasInvestigated = False # Investigator can investigate
         self.nProtections = 0 # Number of protects that the whitehats gave
 
-        socket.emit("message", NIGHT_END_HACKERS_MESSAGE_ALL, to=self.gamecode)
-        socket.emit("message", NIGHT_START_MESSAGE_WHITEHATS, to=f"{self.gamecode}/whitehat")
 
     def startInvestigators(self):
         self.roundStatus = 2 # Investigators' turn to speak
         self.hasInvestigated = False # Investigator can investigate
-        self.nProtections = 0 # Number of protects that the whitehats gave
-
-        socket.emit("message", NIGHT_END_WHITEHATS_MESSAGE_ALL, to=self.gamecode)
-        socket.emit("message", NIGHT_START_MESSAGE_INVESTIGATOR, to=f"{self.gamecode}/investigator")
 
     def startCivilians(self):
         self.roundStatus = 3 # Hackers' turn to speak
-
-        socket.emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=self.gamecode)
 
     # Removes duplicate names in the list, self.victims.
     def removeDuplicateVictims(self):

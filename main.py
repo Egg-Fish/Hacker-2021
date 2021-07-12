@@ -9,6 +9,16 @@ from flask import render_template, request, redirect, session
 
 from game_logic import GameInstance, create_player, GAMES
 
+NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims"}
+NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /target <alias> to target a victim."}
+NIGHT_START_MESSAGE_WHITEHATS = {"sender": "SYSTEM", "message": "You are a White Hat. Do /protect <alias> to protect a person from being hacked. Can only be used once per round per white hat."}
+NIGHT_START_MESSAGE_INVESTIGATOR = {"sender": "SYSTEM", "message": "You are the one and only Invesigator. Do /scan <alias> to reveal the role of a person. Can only be used once per round."}
+
+NIGHT_END_HACKERS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The hackers have chosen their victims."}
+NIGHT_END_WHITEHATS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The white hats have chosen who to protect."}
+NIGHT_END_INVESTIGATOR_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The investigator has revealed the role of a person."}
+
+
 logging.basicConfig(
     filename=f"logs\log.log", 
     filemode="w+", 
@@ -27,7 +37,7 @@ def sendSocketIOFile():
 
 
 # TEST: REMOVE IN PRODUCTION
-oriontestgame = GameInstance("oriontestgame", nHackers=2)
+oriontestgame = GameInstance("oriontestgame")
 GAMES.update({"oriontestgame": oriontestgame})
 
 dummygame = GameInstance("dummygame")
@@ -92,19 +102,6 @@ def gamemaster(gamecode):
     session["gamecode"] = gamecode
     return render_template("gamemaster.html")
 
-
-
-# SocketIO Events
-@socketio.on("connect")
-def connect():
-    host = request.host
-    logging.debug(f"Host {host} has connected")
-
-@socketio.on("disconnect")
-def disconnect():
-    host = request.host
-    logging.debug(f"Host {host} has disconnected")
-
 @socketio.on("startGame")
 def startGame():
     gamecode = session["gamecode"]
@@ -122,6 +119,71 @@ def getGameData():
     data = game.getGameData()
 
     emit("gameData", data)
+
+@socketio.on("alertRoom")
+def alertRoom(data):
+    message = data["message"]
+    room = data["room"]
+
+    gamecode = session["gamecode"]
+    gameroom = gamecode + "/" + room
+
+    logging.debug(f"Sending alertMessage to {gameroom} (message: {message})")
+    emit("alertMessage", {"message": message}, to=gameroom)
+
+
+@socketio.on("startHackers")
+def startHackers():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
+    emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
+
+    game.startHackers()
+
+@socketio.on("startWhitehats")
+def startWhitehats():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    emit("message", NIGHT_END_HACKERS_MESSAGE_ALL, to=f"{gamecode}/player")
+    emit("message", NIGHT_START_MESSAGE_WHITEHATS, to=f"{gamecode}/whitehat")
+
+    game.startWhitehats()
+
+@socketio.on("startInvestigators")
+def startInvestigators():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    emit("message", NIGHT_END_WHITEHATS_MESSAGE_ALL, to=f"{gamecode}/player")
+    emit("message", NIGHT_START_MESSAGE_INVESTIGATOR, to=f"{gamecode}/investigator")
+
+    game.startInvestigators()
+
+@socketio.on("startCivilians")
+def startCivilians():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=f"{gamecode}/player")
+
+    game.startCivilians()
+
+
+
+
+# SocketIO Events
+@socketio.on("connect")
+def connect():
+    host = request.host
+    logging.debug(f"Host {host} has connected")
+
+@socketio.on("disconnect")
+def disconnect():
+    host = request.host
+    logging.debug(f"Host {host} has disconnected")
 
 @socketio.on("joinGameRoom")
 def joinGameRoom():
@@ -148,18 +210,6 @@ def getPlayerData():
     player = GAMES[gamecode].players[name]
 
     emit("playerData", player)
-
-@socketio.on("alertRoom")
-def alertRoom(data):
-    message = data["message"]
-    room = data["room"]
-
-    gamecode = session["gamecode"]
-    gameroom = gamecode + "/" + room
-
-    logging.debug(f"Sending alertMessage to {gameroom} (message: {message})")
-    emit("alertMessage", {"message": message}, to=gameroom)
-
 
 # Helper command
 def isAuthorised(player_role, round_status):
