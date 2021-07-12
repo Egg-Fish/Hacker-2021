@@ -180,17 +180,41 @@ def sendMessage(data):
 
     logging.debug(f"[GC: {gamecode}] Message received from {name}: {message}")
 
-    if player["status"] != "online":
+    if player["status"] != "online": # Player is out of the game
         message = "You are offline. Better luck next time."
-        emit("message", {"sender": sender, "message": message})
+        emit("message", {"sender": "SYSTEM", "message": message})
         return
 
-    if not isAuthorised(role, game.roundStatus):
+    if not isAuthorised(role, game.roundStatus): # Player is not in turn
         message = "You cannot chat at this point in time."
-        emit("message", {"sender": sender, "message": message})
+        emit("message", {"sender": "SYSTEM", "message": message})
         return
 
-    else:
+    else: # Player is in turn
+        if message[0] == "/": # Is a command
+            m = message.split()
+            command = m[0]
+            if len(m) != 2:
+                emit("message", {"sender": "SYSTEM", "message": "INVALID COMMAND"})
+                return
+
+            if command == "/target":
+                result = game.hackVictim(m[1])
+                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
+
+            elif command == "/protect":
+                result = game.protectPlayer(m[1])
+                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
+
+            elif command == "/scan":
+                result = game.investigateAlias(m[1])
+                emit("message", {"sender": "SYSTEM", "message": f"The player is a {result}"})
+
+            else:
+                emit("message", {"sender": "SYSTEM", "message": f"COMMAND NOT FOUND"})
+
+            return
+
         if game.roundStatus < 3:
             sender = "Anonymous"
             gameroom = gamecode + "/" + role
@@ -203,4 +227,4 @@ def sendMessage(data):
 
 
 if __name__ == "__main__":
-    socketio.run(app=app, host="0.0.0.0", port="5000")
+    socketio.run(app=app, host="0.0.0.0", port="5000", debug=True)
