@@ -3,16 +3,28 @@ pre{
 }
 
 #chatbox{
-    height: 90%;
     margin: auto;
     width: 50%;
     border: 3px solid green;
+    background-color: black;
+    color: white;
 }
 
 #output{
+    padding: 20px;
+    height: 80%;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    overflow-y: scroll;
 }
+
+#output::-webkit-scrollbar{
+    width: 40px;
+}
+
+#output::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  }
 
 #inputField{
     position: fixed;
@@ -21,17 +33,22 @@ pre{
     bottom: 0px;
     width: 900px;
     height: 60px;
+    background-color: var(--gui-colour);
 }
 
-#message{
-    width: 75%;
+input[id=message]{
+    width: 100%;
     height: 100%;
+    font-size: 20pt;
+    border-style: none;
+    color: white;
+    background-color: var(--gui-colour);
 }
 
-button{
-    width: 25%;
-    height: 100%;
+input[id=message]:focus{
+    outline: none;
 }
+
 
 #playerData{
     position: fixed;
