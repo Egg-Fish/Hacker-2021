@@ -152,6 +152,7 @@ class GameInstance:
         self.victims = []
         self.hasInvestigated = False
         self.nProtections = 0
+        self.protected = []
 
         self.winner = 0
         # 0 - Noone
@@ -177,17 +178,11 @@ class GameInstance:
     player entry will be overriden.
     """
     def add_player(self, player:dict):
-        player["alias"] = random.choice(RANDOM_NAMES)
-
-        aliases = [self.players[x]["alias"] for x in self.players]
-
-        while player["alias"] in aliases:
-            player["alias"] = random.choice(RANDOM_NAMES)
 
         self.players.update({player["name"] : player})
         self.nOnline += 1
 
-        logging.info(f"User {player['name']} with alias {player['alias']} has joined the game {self.gamecode}")
+        logging.info(f"User {player['name']} has joined the game {self.gamecode}")
 
     """
     Parses the game states into a single new-line-escaped string
@@ -210,6 +205,7 @@ class GameInstance:
         result["victims"] = self.victims
         result["hasInvestigated"] = self.hasInvestigated
         result["nProtections"] = self.nProtections
+        result["protected"] = self.protected
 
         result["continuers"] = self.continuers
         result["finalVictim"] = self.finalVictim
@@ -256,9 +252,15 @@ class GameInstance:
         self.roundStatus = 0 # Hackers' turn to speak
         self.hasInvestigated = False # Investigator can investigate
         self.nProtections = 0
+        self.protected = {}
         self.continuers = {}
         self.finalVictim = ""
         self.finalRole = ""
+        self.winner = 0
+        self.hackers.clear()
+        self.whitehats.clear()
+        self.investigators.clear()
+
 
         player_names = [p for p in self.players]
         random.shuffle(player_names) # Randomise the order of the names of players
@@ -266,28 +268,35 @@ class GameInstance:
         for p in player_names:
             player = self.players[p]
 
+            player["alias"] = random.choice(RANDOM_NAMES)
+
+            aliases = [self.players[x]["alias"] for x in self.players]
+
+            while player["alias"] in aliases:
+                player["alias"] = random.choice(RANDOM_NAMES)
+
             if len(self.hackers) < self.nHackers:
                 self.hackers.append(player)
                 player["role"] = "hacker"
-                logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Hacker")
+                logging.info(f"[GC: {self.gamecode}] Player {player['name']} ({player['alias']}) is a Hacker")
                 self.nOnlineHackers += 1
 
             elif len(self.whitehats) < self.nWhitehats:
                 self.whitehats.append(player)
                 player["role"] = "whitehat"
-                logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a White Hat")
+                logging.info(f"[GC: {self.gamecode}] Player {player['name']} ({player['alias']}) is a White Hat")
                 self.nOnlineWhitehats += 1
 
             elif len(self.investigators) < self.nInvestigators:
                 self.investigators.append(player)
                 player["role"] = "investigator"
-                logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Investigator")
+                logging.info(f"[GC: {self.gamecode}] Player {player['name']} ({player['alias']}) is a Investigator")
                 self.nOnlineInvestigators += 1
 
             else:
                 self.civilians.append(player)
                 player["role"] = "civilian"
-                logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Cilivian")
+                logging.info(f"[GC: {self.gamecode}] Player {player['name']} ({player['alias']}) is a Cilivian")
 
 
     def startHackers(self):
@@ -309,6 +318,7 @@ class GameInstance:
         
         self.roundStatus = 1 # White Hats' turn to speak
         self.nProtections = 0 # Number of protects that the whitehats gave
+        self.protected = []
 
         self.removeDuplicateVictims()
         self.continuers = {}
@@ -360,7 +370,7 @@ class GameInstance:
 
         for i in self.victims:
             if i == alias:
-                self.victims.remove(alias)
+                self.protected.append(alias)
                 return 0
         return -4
         pass
@@ -391,6 +401,11 @@ class GameInstance:
         else:
             finalVictim = random.choice(self.victims)
             self.finalVictim = finalVictim
+            if finalVictim in self.protected:
+                self.finalVictim = ""
+                self.finalRole = ""
+                return 0
+            
             for i in self.players:
                 if self.players[i]["alias"] == finalVictim:
                     self.players[i]["status"] = "offline"

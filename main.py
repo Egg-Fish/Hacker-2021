@@ -123,14 +123,41 @@ def game():
         else:
             return render_template("joinscreen.html")
 
+# GM Screen
+@app.route("/create_game")
+def createGame():
+    gamecode = str(random.randint(10000000, 99999999))
 
-
-# Gamemaster Screen
-@app.route("/gm/<gamecode>")
-def gamemaster(gamecode):
+    game = GameInstance(gamecode)
+    GAMES.update({gamecode: game})
+    session["gm"] = True
     session["gamecode"] = gamecode
-    logging.debug(f"Gamemaster has joined {gamecode}")
-    return render_template("gamemaster.html")
+
+    return redirect(f"/gm")
+
+
+
+@app.route("/gm")
+def gamemaster():
+    if "gm" in session and session["gm"] and session["gamecode"]:
+        return render_template("gmscreen.html")
+    else:
+        return "YOU ARE NOT THE GM"
+
+@app.route("/gm/<gamecode>")
+def oriontestgame(gamecode):
+    session["gm"] = True
+    session["gamecode"] = gamecode
+    return render_template("gmscreen.html")
+
+
+
+# Debug Screen
+@app.route("/debug/<gamecode>")
+def debug(gamecode):
+    session["gamecode"] = gamecode
+    logging.debug(f"Debugger has joined {gamecode}")
+    return render_template("debug.html")
 
 @socketio.on("startGame")
 def startGame():
@@ -149,6 +176,17 @@ def getGameData():
     data = game.getGameData()
 
     emit("gameData", data)
+
+@socketio.on("getGameData_gm")
+def getGameData():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    data = game.getGameData()
+
+    emit("gameData_gm", data)
+
+
 
 @socketio.on("alertRoom")
 def alertRoom(data):

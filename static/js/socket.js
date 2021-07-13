@@ -158,3 +158,19 @@ function startInvestigators(){
 function startCivilians(){
     socket.emit("startCivilians");
 }
+
+socket.on("gameData_gm", function(data){
+    document.getElementById("gamecode").innerText = "Game Code: " + data["gamecode"];
+    console.log(data);
+
+    playerHTML = document.getElementById("players");
+
+    playerHTML.innerText = "Players:\n"
+    for (playerName in data["players"]){
+        playerData = data["players"][playerName];
+        playerHTML.innerText += "Name: " + playerName + "\n";
+        playerHTML.innerText += "Alias: " + playerData["alias"] + "\n";
+        playerHTML.innerText += "Role: " + playerData["role"] + "\n";
+        playerHTML.innerText += "Status: " + playerData["status"] + "\n\n";
+    }
+});

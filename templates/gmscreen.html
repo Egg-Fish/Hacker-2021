@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/gmscreen.css')}}">
+{% endblock %}
+
+
+{% block content %}
+<div id="content">
+    <h1 id="gamecode">Game Code: --------</h1>
+    <div id="players">Players:<br></div>
+    <button onClick="startGame()">Start Game</button>
+</div>
+
+<script defer>
+    function loopGameData(){
+        socket.emit("getGameData_gm");
+        setTimeout(loopGameData, 1000);
+    }
+
+    loopGameData();
+</script>
+
+{% endblock %}
