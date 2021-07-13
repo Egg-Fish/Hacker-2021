@@ -95,14 +95,33 @@ socket.on("endGame", function(data){
 });
 
 socket.on("endGameData", function(data){ // For the endgame screen only
-    var hackers = data["hackers"]
-    var whitehats = data["whitehats"]
-    var investigators = data["investigators"]
-    var civilians = data["civilians"]
+    var hackers = data["hackers"];
+    var whitehats = data["whitehats"];
+    var investigators = data["investigators"];
+    var civilians = data["civilians"];
 
-    var banner = ""
+    var banner = data["winner"];
 
+    document.getElementById("banner").innerText = banner;
 
+    console.log(data);
+
+    for (h in hackers){
+        console.log(hackers[h]["name"]);
+        document.getElementById("hackers").innerText += hackers[h]["name"] + "\n";
+    }
+    for (w in whitehats){
+        console.log(whitehats[w]["name"]);
+        document.getElementById("whitehats").innerText += whitehats[w]["name"] + "\n";
+    }
+    for (i in investigators){
+        console.log(investigators[i]["name"]);
+        document.getElementById("investigators").innerText += investigators[i]["name"] + "\n";
+    }
+    for (c in civilians){
+        console.log(civilians[c]["name"]);
+        document.getElementById("civilians").innerText += civilians[c]["name"] + "\n";
+    }
 });
 
 
