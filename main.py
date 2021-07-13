@@ -18,6 +18,9 @@ NIGHT_END_HACKERS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The hackers hav
 NIGHT_END_WHITEHATS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The white hats have chosen who to protect."}
 NIGHT_END_INVESTIGATOR_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The investigator has revealed the role of a person."}
 
+DAY_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has ended. Everyone wakes up."}
+DAY_VOTE_MESSAGE_ALL = {"sender": "SYSTEM", "message": "You can now vote for who you think is(are) the hacker(s) using /vote <alias>."}
+
 
 logging.basicConfig(
     filename=f"logs\log.log", 
@@ -167,6 +170,10 @@ def startHackers():
     emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
+    emit("message", {
+        "sender": "SYSTEM", 
+        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+    }, to=f"{gamecode}/hacker")
 
     game.startHackers()
 
@@ -178,6 +185,10 @@ def startWhitehats():
     emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_HACKERS_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_WHITEHATS, to=f"{gamecode}/whitehat")
+    emit("message", {
+        "sender": "SYSTEM", 
+        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+    }, to=f"{gamecode}/whitehat")
 
     game.startWhitehats()
 
@@ -189,6 +200,10 @@ def startInvestigators():
     emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_WHITEHATS_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_INVESTIGATOR, to=f"{gamecode}/investigator")
+    emit("message", {
+        "sender": "SYSTEM", 
+        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+    }, to=f"{gamecode}/investigator")
 
     game.startInvestigators()
 
@@ -199,6 +214,10 @@ def startCivilians():
 
     emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=f"{gamecode}/player")
+    emit("message", {
+        "sender": "SYSTEM", 
+        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+    }, to=f"{gamecode}/player")
 
     game.startCivilians()
 
@@ -261,6 +280,14 @@ def getRoundData():
 def isAuthorised(player_role, round_status):
     return True
 
+def createOnlineAliasesString(l):
+    result = ["Current Online Players:"]
+
+    for alias in l:
+        result.append(alias)
+
+    return "\n".join(result)
+
 @socketio.on("sendMessage")
 def sendMessage(data):
     gamecode = session["gamecode"]
@@ -269,6 +296,7 @@ def sendMessage(data):
     game = GAMES[gamecode]
     player = GAMES[gamecode].players[name]
 
+    
     role = player["role"]
 
     sender = player["alias"]
@@ -281,11 +309,6 @@ def sendMessage(data):
         emit("message", {"sender": "SYSTEM", "message": message})
         return
 
-    if not isAuthorised(role, game.roundStatus): # Player is not in turn
-        message = "You cannot chat at this point in time."
-        emit("message", {"sender": "SYSTEM", "message": message})
-        return
-
     else: # Player is in turn
         if not message or len(message) > 500:
             return
@@ -294,23 +317,111 @@ def sendMessage(data):
             logging.debug(f"Command {message} received from {name} ({role})")
             m = message.split(maxsplit=1)
             command = m[0]
+
+            if command == "/continue" or command == "/c":
+                game.continuers[name] = 1
+                rs = game.continueGame()
+
+                emit("message", {"sender": "SYSTEM", "message": f"Waiting for other players to continue..."})
+
+                roundStatus = rs[0]
+
+                if roundStatus == -1:
+                    return
+
+                if roundStatus == 0:
+                    emit("clearChat", to=f"{gamecode}/player")
+                    emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
+                    emit("message", {
+                        "sender": "SYSTEM", 
+                        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+                    }, to=f"{gamecode}/hacker")
+
+                elif roundStatus == 1:
+                    emit("clearChat", to=f"{gamecode}/player")
+                    emit("message", NIGHT_END_HACKERS_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", NIGHT_START_MESSAGE_WHITEHATS, to=f"{gamecode}/whitehat")
+                    emit("message", {
+                        "sender": "SYSTEM", 
+                        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+                    }, to=f"{gamecode}/whitehat")
+
+
+                elif roundStatus == 2:
+                    emit("clearChat", to=f"{gamecode}/player")
+                    emit("message", NIGHT_END_WHITEHATS_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", NIGHT_START_MESSAGE_INVESTIGATOR, to=f"{gamecode}/investigator")
+                    emit("message", {
+                        "sender": "SYSTEM", 
+                        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+                    }, to=f"{gamecode}/investigator")
+
+                elif roundStatus == 3:
+                    if game.nOffline > 0:
+                        if game.nOnlineHackers == 0:
+                            game.winner = 2
+                            game.status = 2
+                            emit("endGame", to=f"{gamecode}/player")
+                            return
+
+                        elif game.nOnline - game.nOnlineHackers <= game.nOnlineHackers:
+                            game.winner = 1
+                            game.status = 2
+                            emit("endGame", to=f"{gamecode}/player")
+                            return
+
+                    emit("clearChat", to=f"{gamecode}/player")
+                    # emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", DAY_START_MESSAGE_ALL, to=f"{gamecode}/player")
+                    if game.finalVictim:
+                        emit("message", {"sender": "SYSTEM", "message": f"The player {game.finalVictim} has been hacked! The player was a {game.finalRole} This player can no longer communicate."}, to=f"{gamecode}/player")
+                    else:
+                        emit("message", {"sender": "SYSTEM", "message": f"Nobody has been hacked!"}, to=f"{gamecode}/player")
+
+                    emit("message", DAY_VOTE_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", {
+                        "sender": "SYSTEM", 
+                        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+                    }, to=f"{gamecode}/player")
+
+                elif roundStatus > 3: # Game win scenario
+                    emit("endGame", to=f"{gamecode}/player")
+
+                return
+
             if len(m) < 2:
                 emit("message", {"sender": "SYSTEM", "message": "INVALID COMMAND"})
                 return
 
-            if command == "/target":
+            if command == "/target" or command == "/t":
                 result = game.hackVictim(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+                if result == -1:
+                    emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
+                elif result == 0:
+                    emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} has been targeted"}, to=f"{gamecode}/hacker")
+                
                 logging.debug(f"Command game.hackVictim with parameter {m[1]} returned {result}")
 
-            elif command == "/protect":
+            elif command == "/protect" or command == "/p":
                 result = game.protectPlayer(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+
+                if result == -1:
+                    emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
+                elif result == -2:
+                    emit("message", {"sender": "SYSTEM", "message": f"Your team has already used this ability {game.nProtections} time(s)"}, to=f"{gamecode}/whitehat")
+                else:
+                    emit("message", {"sender": "SYSTEM", "message": f"Protecting {m[1]}..."}, to=f"{gamecode}/whitehat")
+                
                 logging.debug(f"Command game.protectPlayer with parameter {m[1]} returned {result}")
 
-            elif command == "/scan":
+            elif command == "/scan" or command == "/s":
                 result = game.investigateAlias(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+                if result == -1:
+                    emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
+                elif result:
+                    emit("message", {"sender": "SYSTEM", "message": f"The alias {m[1]} is a {result}"}, to=f"{gamecode}/investigator")
+                
                 logging.debug(f"Command game.investigateAlias with parameter {m[1]} returned {result}")
 
             else:

@@ -13,10 +13,10 @@ socket.on("gameData", function(data){
 function startGame(){
     alert("Starting game for all participants...");
     socket.emit("startGame");
+    setTimeout(() => {socket.emit("startHackers");}, 2000);
 }
 
 socket.on('startGame', function(){
-    alert("the game is starting...");
     window.location = "/";
 });
 

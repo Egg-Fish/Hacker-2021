@@ -157,6 +157,17 @@ class GameInstance:
         # 0 - Noone
         # 1 - Hackers
         # 2 - Civilians
+
+        self.continuers = {}
+        self.finalVictim = ""
+        self.finalRole = ""
+
+        self.nOffline = 0
+        self.nOnline = 0
+
+        self.nOnlineHackers = 0
+        self.nOnlineWhitehats = 0
+        self.nOnlineInvestigators = 0
     
     """
     Adds a player to the player dictionary.
@@ -174,6 +185,7 @@ class GameInstance:
             player["alias"] = random.choice(RANDOM_NAMES)
 
         self.players.update({player["name"] : player})
+        self.nOnline += 1
 
         logging.info(f"User {player['name']} with alias {player['alias']} has joined the game {self.gamecode}")
 
@@ -198,6 +210,13 @@ class GameInstance:
         result["victims"] = self.victims
         result["hasInvestigated"] = self.hasInvestigated
         result["nProtections"] = self.nProtections
+
+        result["continuers"] = self.continuers
+        result["finalVictim"] = self.finalVictim
+        result["finalRole"] = self.finalRole
+
+        result["nOffline"] = self.nOffline
+        result["nOnline"] = self.nOnline
 
         return result
 
@@ -237,6 +256,9 @@ class GameInstance:
         self.roundStatus = 0 # Hackers' turn to speak
         self.hasInvestigated = False # Investigator can investigate
         self.nProtections = 0
+        self.continuers = {}
+        self.finalVictim = ""
+        self.finalRole = ""
 
         player_names = [p for p in self.players]
         random.shuffle(player_names) # Randomise the order of the names of players
@@ -248,16 +270,19 @@ class GameInstance:
                 self.hackers.append(player)
                 player["role"] = "hacker"
                 logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Hacker")
+                self.nOnlineHackers += 1
 
             elif len(self.whitehats) < self.nWhitehats:
                 self.whitehats.append(player)
                 player["role"] = "whitehat"
                 logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a White Hat")
+                self.nOnlineWhitehats += 1
 
             elif len(self.investigators) < self.nInvestigators:
                 self.investigators.append(player)
                 player["role"] = "investigator"
                 logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Investigator")
+                self.nOnlineInvestigators += 1
 
             else:
                 self.civilians.append(player)
@@ -268,24 +293,40 @@ class GameInstance:
     def startHackers(self):
         self.roundStatus = 0 # Hackers' turn to speak
         self.victims.clear()
-
-
-    def startWhitehats(self):
-        self.roundStatus = 1 # White Hats' turn to speak
-        self.nProtections = 0 # Number of protects that the whitehats gave
-
-
-    def startInvestigators(self):
-        self.roundStatus = 2 # Investigators' turn to speak
-        self.hasInvestigated = False # Investigator can investigate
-
-    def startCivilians(self):
-        self.roundStatus = 3 # Hackers' turn to speak
+        self.finalVictim = ""
+        self.finalRole = ""
+        self.continuers = {}
 
     # Removes duplicate names in the list, self.victims.
     def removeDuplicateVictims(self):
-        self.victims = set(self.victims)
+        self.victims = list(set(self.victims))
         pass
+
+    def startWhitehats(self):
+        if self.nOnlineWhitehats == 0:
+            self.startInvestigators()
+            return
+        
+        self.roundStatus = 1 # White Hats' turn to speak
+        self.nProtections = 0 # Number of protects that the whitehats gave
+
+        self.removeDuplicateVictims()
+        self.continuers = {}
+
+
+    def startInvestigators(self):
+        if self.nOnlineInvestigators == 0:
+            self.endNight()
+            self.startCivilians()
+            return
+        
+        self.roundStatus = 2 # Investigators' turn to speak
+        self.hasInvestigated = False # Investigator can investigate
+        self.continuers = {}
+
+    def startCivilians(self):
+        self.roundStatus = 3 # Hackers' turn to speak
+        self.continuers = {}
 
     # Adds a player with alias, alias into the list, self.victims. 
     # Return -1 if alias is not in the game.
@@ -303,19 +344,25 @@ class GameInstance:
     # Return -2 if the whitehats have exhausted their 
     # protection limit (aka the number of whitehats). 
     # Return -3 if the victims list is empty.
+    # Return -4 if the alias is not being targeted.
     # Return 0 and add 1 to self.nProtections on successful execution.
     def protectPlayer(self, alias):
+        if alias not in [x["alias"] for x in self.players.values()]:
+            return -1
+
+        self.nProtections += 1
+
+        if self.nProtections > self.nWhitehats:
+            return -2
+
         if len(self.victims) == 0:
             return -3
-        for i in self.players:
-            if self.players[i]["alias"] == alias:
-                if self.nProtections >= self.nWhitehats:
-                    return -2
-                else:
-                    self.nProtections += 1
-                    self.victims.remove(alias)
-                    return 0
-        return -1
+
+        for i in self.victims:
+            if i == alias:
+                self.victims.remove(alias)
+                return 0
+        return -4
         pass
 
     # Returns the role of a player whose alias is alias. Set the hasInvestigated 
@@ -343,11 +390,69 @@ class GameInstance:
             return 0
         else:
             finalVictim = random.choice(self.victims)
+            self.finalVictim = finalVictim
+            for i in self.players:
+                if self.players[i]["alias"] == finalVictim:
+                    self.players[i]["status"] = "offline"
+                    self.finalRole = self.players[i]["role"]
+                    self.nOffline += 1
+                    self.nOnline -= 1
+
+                    if self.players[i]["role"] == "hacker":
+                        self.nOnlineHackers -= 1
+
+                    elif self.players[i]["role"] == "whitehat":
+                        self.nOnlineWhitehats -= 1
+
+                    elif self.players[i]["role"] == "investigator":
+                        self.nOnlineInvestigators -= 1
+
             return finalVictim
 
-    
+        
 
+    def continueGame(self):
+        if self.nOffline > 0:
+            if self.nOnlineHackers == 0:
+                self.winner = 2
+                self.status = 2
+                return [4, ""]
 
+            elif self.nOnline - self.nOnlineHackers <= self.nOnlineHackers:
+                self.winner = 1
+                self.status = 2
+                return [4, ""]
+            
+        if self.roundStatus == 0 and len(self.continuers) == self.nOnlineHackers:
+            self.continuers = {}
+            self.startWhitehats()
+        
+        elif self.roundStatus == 1 and len(self.continuers) == self.nOnlineWhitehats:
+            self.continuers = {}
+            self.startInvestigators()
+        
+        elif self.roundStatus == 2 and len(self.continuers) == self.nOnlineInvestigators:
+            self.continuers = {}
+            self.endNight()
+            self.startCivilians()
+        
+        elif self.roundStatus == 3 and len(self.continuers) == self.nOnline:
+            self.continuers = {}
+            self.startHackers()
+
+        else:
+            return [-1, ""]
+
+        return [self.roundStatus, ""]
+
+    def getOnlinePlayerAliases(self):
+        aliases = []
+
+        for i in self.players:
+            if self.players[i]["status"] == "online":
+                aliases.append(self.players[i]["alias"])
+
+        return aliases
 
 def create_player(name):
     player = \
@@ -359,21 +464,3 @@ def create_player(name):
     }
 
     return player
-
-
-
-"""
-Parameters:
-    name: the name of the player
-    gamecode: the current gamecode that the player is in
-
-Returns:
-    True (boolean) if the role is allowed to chat in the chatbox
-    at that point in time, else False (boolean)
-"""
-def isAllowedToSpeak(name, gamecode):
-    game = GAMES[gamecode] # This returns the GameInstance object of the current game
-    # Tip:
-    # game.players["richard"]["alias"] returns "SkyrusPreyas"
-    # likewise game.players[name]["alias"] returns the alias of the player whos name is name.
-    pass
