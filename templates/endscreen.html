@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/endscreen.css')}}">
+{% endblock %}
+
+{% block content %}
+<div id="banner">The Civilians Have Won!</div>
+<div id="players">
+    <span id="hackers">
+        Hackers:<br>
+    </span>
+
+    <span id="whitehats">
+        White Hats:<br>
+    </span>
+
+    <span id="investigators">
+        Investigators:<br>
+    </span>
+
+    <span id="civilians">
+        Civilians:<br>
+    </span>
+</div>
+
+{% endblock %}

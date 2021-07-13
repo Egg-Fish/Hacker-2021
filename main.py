@@ -266,7 +266,7 @@ def sendMessage(data):
             return
         
         if message[0] == "/": # Is a command
-            m = message.split()
+            m = message.split(max_split=1)
             command = m[0]
             if len(m) < 2:
                 emit("message", {"sender": "SYSTEM", "message": "INVALID COMMAND"})

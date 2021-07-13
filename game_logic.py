@@ -145,6 +145,7 @@ class GameInstance:
         self.hackers = []
         self.whitehats = []
         self.investigators = []
+        self.civilians = []
         # The list that will contain the details of the players
         # The real names do not need to be the key
 
@@ -238,6 +239,7 @@ class GameInstance:
                 logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Investigator")
 
             else:
+                self.civilians.append(player)
                 player["role"] = "civilian"
                 logging.info(f"[GC: {self.gamecode}] Player {player['name']} is a Cilivian")
 

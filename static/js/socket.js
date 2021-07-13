@@ -8,8 +8,6 @@ socket.on("gameData", function(data){
     for (const [key, value] of Object.entries(data)) {
         console.log(key, value);
     }
-    var d = document.getElementById("output");
-    d.innerHTML = data;
 });
 
 function startGame(){
@@ -89,7 +87,22 @@ socket.on("roundData", function(data){
     for (const [key, value] of Object.entries(data)) {
         console.log(key, value);
     }
-    document.getElementById("output").innerText += data["nProtections"] + "\n";
+    // document.getElementById("output").innerText += data["nProtections"] + "\n";
+});
+
+socket.on("endGame", function(data){
+    window.location = "/"; // Reload page
+});
+
+socket.on("endGameData", function(data){ // For the endgame screen only
+    var hackers = data["hackers"]
+    var whitehats = data["whitehats"]
+    var investigators = data["investigators"]
+    var civilians = data["civilians"]
+
+    var banner = ""
+
+
 });
 
 
