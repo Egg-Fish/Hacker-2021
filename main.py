@@ -40,7 +40,7 @@ def sendSocketIOFile():
 oriontestgame = GameInstance("oriontestgame")
 GAMES.update({"oriontestgame": oriontestgame})
 
-dummygame = GameInstance("dummygame")
+dummygame = GameInstance("dummygame", nWhitehats=2, nHackers=2)
 
 dummyplayer1 = create_player("dummy1")
 dummygame.add_player(dummyplayer1)
@@ -54,6 +54,18 @@ dummygame.add_player(dummyplayer3)
 dummyplayer4 = create_player("dummy4")
 dummygame.add_player(dummyplayer4)
 
+dummyplayer5 = create_player("dummy5")
+dummygame.add_player(dummyplayer5)
+
+dummyplayer6 = create_player("dummy6")
+dummygame.add_player(dummyplayer6)
+
+dummyplayer7 = create_player("dummy7")
+dummygame.add_player(dummyplayer7)
+
+dummyplayer8 = create_player("dummy8")
+dummygame.add_player(dummyplayer8)
+
 dummygame.startGame()
 dummygame.startHackers()
 
@@ -61,7 +73,6 @@ GAMES.update({"dummygame": dummygame})
 
 @app.route("/test/<path>")
 def test(path):
-    dummygame.startGame()
     session["name"] = "dummy1"
     session["gamecode"] = "dummygame"
     session["role"] = "hacker"
@@ -298,6 +309,16 @@ def sendMessage(data):
 
         logging.debug(f"[GC: {gamecode}] Sending message to {gameroom}")
         emit("message", {"sender": sender, "message": message}, to=gameroom)
+
+@socketio.on("getEndGameData")
+def getEndGameData():
+    gamecode = session["gamecode"]
+
+    game = GAMES[gamecode]
+
+    data = game.getEndGameData()
+
+    emit("endGameData", data)
 
 
 if __name__ == "__main__":
