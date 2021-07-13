@@ -324,8 +324,14 @@ class GameInstance:
     # Return -2 if the investigator has already investigated. 
     # Return the role of the player on successful execution.
     def investigateAlias(self, alias):
-        print(alias)
-        return "SUSSY BAKA"
+        for i in self.players:
+            if self.players[i]["alias"] == alias:
+                if self.hasInvestigated == False:
+                    self.hasInvestigated = True
+                    return self.players[i]["role"]
+                elif self.hasInvestigated == True:
+                    return -2
+        return -1
 
 
     # Picks a final victim in self.victims
@@ -337,7 +343,6 @@ class GameInstance:
             return 0
         else:
             finalVictim = random.choice(self.victims)
-
             return finalVictim
 
     
