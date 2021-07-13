@@ -78,6 +78,9 @@ def test(path):
     session["role"] = "hacker"
     session["alias"] = "sussybaka"
 
+    if path == "endscreen.html":
+        dummygame.winner = random.randint(1,2)
+    
     return render_template(path)
 
 # Application Events
@@ -112,7 +115,7 @@ def game():
                 return render_template("game.html")
 
             elif game.status == 2:
-                return "The game has ended. Thank you for playing!"
+                return render_template("endscreen.html")
         
         else:
             return render_template("joinscreen.html")
@@ -123,6 +126,7 @@ def game():
 @app.route("/gm/<gamecode>")
 def gamemaster(gamecode):
     session["gamecode"] = gamecode
+    logging.debug(f"Gamemaster has joined {gamecode}")
     return render_template("gamemaster.html")
 
 @socketio.on("startGame")
@@ -160,6 +164,7 @@ def startHackers():
     gamecode = session["gamecode"]
     game = GAMES[gamecode]
 
+    emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
 
@@ -170,6 +175,7 @@ def startWhitehats():
     gamecode = session["gamecode"]
     game = GAMES[gamecode]
 
+    emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_HACKERS_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_WHITEHATS, to=f"{gamecode}/whitehat")
 
@@ -180,6 +186,7 @@ def startInvestigators():
     gamecode = session["gamecode"]
     game = GAMES[gamecode]
 
+    emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_WHITEHATS_MESSAGE_ALL, to=f"{gamecode}/player")
     emit("message", NIGHT_START_MESSAGE_INVESTIGATOR, to=f"{gamecode}/investigator")
 
@@ -190,11 +197,15 @@ def startCivilians():
     gamecode = session["gamecode"]
     game = GAMES[gamecode]
 
+    emit("clearChat", to=f"{gamecode}/player")
     emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=f"{gamecode}/player")
 
     game.startCivilians()
 
-
+@socketio.on("clearChat")
+def clearChat():
+    gamecode = session["gamecode"]
+    emit("clearChat", to=f"{gamecode}/player")
 
 
 # SocketIO Events
@@ -213,6 +224,7 @@ def joinGameRoom():
     gamecode = session["gamecode"]
     name = session['name']
 
+    game = GAMES[gamecode]
     role = GAMES[gamecode].players[name]["role"]
 
     session["role"] = role
@@ -223,6 +235,8 @@ def joinGameRoom():
     if "role" in session:
         join_room(gamecode + "/" + role)
         logging.debug(f"User {session['name']} has joined the socket room [{gamecode}/{role}]")
+
+    emit("newPlayer", game.players, to=f"{gamecode}/player")
 
 
 @socketio.on("getPlayerData")
@@ -277,6 +291,7 @@ def sendMessage(data):
             return
         
         if message[0] == "/": # Is a command
+            logging.debug(f"Command {message} received from {name} ({role})")
             m = message.split(maxsplit=1)
             command = m[0]
             if len(m) < 2:
@@ -285,17 +300,21 @@ def sendMessage(data):
 
             if command == "/target":
                 result = game.hackVictim(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
+                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+                logging.debug(f"Command game.hackVictim with parameter {m[1]} returned {result}")
 
             elif command == "/protect":
                 result = game.protectPlayer(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
+                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+                logging.debug(f"Command game.protectPlayer with parameter {m[1]} returned {result}")
 
             elif command == "/scan":
                 result = game.investigateAlias(m[1])
-                emit("message", {"sender": "SYSTEM", "message": f"Command returned {result}"})
+                emit("message", {"sender": "SYSTEM", "message": f"Command with input {m[1]} returned {result}"}, to=f"{gamecode}/player")
+                logging.debug(f"Command game.investigateAlias with parameter {m[1]} returned {result}")
 
             else:
+                logging.debug(f"Command Not Found")
                 emit("message", {"sender": "SYSTEM", "message": f"COMMAND NOT FOUND"})
 
             return

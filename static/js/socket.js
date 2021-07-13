@@ -102,7 +102,17 @@ socket.on("endGameData", function(data){ // For the endgame screen only
 
     var banner = data["winner"];
 
-    document.getElementById("banner").innerText = banner;
+    if (banner == 0){
+        document.getElementById("banner").innerText = "HOW DID YOU GET HERE?";
+    }
+
+    else if (banner == 1){
+        document.getElementById("banner").innerText = "Hackers have won!";
+    }
+
+    else if (banner == 2){
+        document.getElementById("banner").innerText = "Civilians have won!";
+    }
 
     console.log(data);
 
@@ -122,6 +132,14 @@ socket.on("endGameData", function(data){ // For the endgame screen only
         console.log(civilians[c]["name"]);
         document.getElementById("civilians").innerText += civilians[c]["name"] + "\n";
     }
+});
+
+function clearChat(){
+    socket.emit("clearChat");
+}
+
+socket.on("clearChat", function(){
+    document.getElementById("output").innerText = "";
 });
 
 
