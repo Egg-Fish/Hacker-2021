@@ -152,6 +152,11 @@ class GameInstance:
         self.victims = []
         self.hasInvestigated = False
         self.nProtections = 0
+
+        self.winner = 0
+        # 0 - Noone
+        # 1 - Hackers
+        # 2 - Civilians
     
     """
     Adds a player to the player dictionary.
@@ -188,6 +193,7 @@ class GameInstance:
         result["hackers"] = self.hackers
         result["whitehats"] = self.whitehats
         result["investigators"] = self.investigators
+        result["civilians"] = self.civilians
 
         result["victims"] = self.victims
         result["hasInvestigated"] = self.hasInvestigated
@@ -204,6 +210,21 @@ class GameInstance:
         result["victims"] = self.victims
         result["hasInvestigated"] = self.hasInvestigated
         result["nProtections"] = self.nProtections
+
+        return result
+
+    def getEndGameData(self): # Player-Safe Data
+        result = {}
+        result["gamecode"] = self.gamecode
+        result["status"] = self.status
+        result["roundStatus"] = self.roundStatus
+
+        result["winner"] = self.winner
+        
+        result["hackers"] = self.hackers
+        result["whitehats"] = self.whitehats
+        result["investigators"] = self.investigators
+        result["civilians"] = self.civilians
 
         return result
 
