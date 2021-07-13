@@ -269,6 +269,7 @@ class GameInstance:
     # Return -1 if alias is not in the game.
     # Return 0 on successful execution.
     def hackVictim(self, alias):
+        print(alias)
         pass
 
     # Removes a player with alias, alias from the list, self.victims. 
@@ -278,6 +279,7 @@ class GameInstance:
     # Return -3 if the victims list is empty.
     # Return 0 and add 1 to self.nProtections on successful execution.
     def protectPlayer(self, alias):
+        print(alias)
         pass
 
     # Returns the role of a player whose alias is alias. Set the hasInvestigated 
@@ -286,6 +288,7 @@ class GameInstance:
     # Return -2 if the investigator has already investigated. 
     # Return the role of the player on successful execution.
     def investigateAlias(self, alias):
+        print(alias)
         return "SUSSY BAKA"
 
 
