@@ -284,13 +284,18 @@ class GameInstance:
 
     # Removes duplicate names in the list, self.victims.
     def removeDuplicateVictims(self):
+        self.victims = set(self.victims)
         pass
 
     # Adds a player with alias, alias into the list, self.victims. 
     # Return -1 if alias is not in the game.
     # Return 0 on successful execution.
     def hackVictim(self, alias):
-        print(alias)
+        for i in self.players:  # Players per Room. | Keys are the actual Name | players["richard"]["alias"]
+            if self.players[i]["alias"] == alias:
+                self.victims.append(alias)
+                return 0
+        return -1
         pass
 
     # Removes a player with alias, alias from the list, self.victims. 
@@ -300,7 +305,17 @@ class GameInstance:
     # Return -3 if the victims list is empty.
     # Return 0 and add 1 to self.nProtections on successful execution.
     def protectPlayer(self, alias):
-        print(alias)
+        if len(self.victims) == 0:
+            return -3
+        for i in self.players:
+            if self.players[i]["alias"] == alias:
+                if self.nProtections >= self.nWhitehats:
+                    return -2
+                else:
+                    self.nProtections += 1
+                    self.victims.remove(alias)
+                    return 0
+        return -1
         pass
 
     # Returns the role of a player whose alias is alias. Set the hasInvestigated 
