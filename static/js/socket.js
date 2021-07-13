@@ -5,6 +5,9 @@ function getGameData(){
 }
 
 socket.on("gameData", function(data){
+    for (const [key, value] of Object.entries(data)) {
+        console.log(key, value);
+    }
     var d = document.getElementById("output");
     d.innerHTML = data;
 });
@@ -76,6 +79,17 @@ socket.on("message", function(data){
     var message = data["message"];
 
     document.getElementById("output").innerText += sender + ": " + message + "\n";
+});
+
+function getRoundData(){
+    socket.emit("getRoundData");
+}
+
+socket.on("roundData", function(data){
+    for (const [key, value] of Object.entries(data)) {
+        console.log(key, value);
+    }
+    document.getElementById("output").innerText += data["nProtections"] + "\n";
 });
 
 

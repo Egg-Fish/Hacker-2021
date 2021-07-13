@@ -175,34 +175,36 @@ class GameInstance:
     Parses the game states into a single new-line-escaped string
     """
     def getGameData(self):
-        result = []
+        result = {}
+        result["gamecode"] = self.gamecode
+        result["players"] = self.players
+        result["status"] = self.status
+        result["roundStatus"] = self.roundStatus
+        result["nHackers"] = self.nHackers
+        result["nWhitehats"] = self.nWhitehats
+        result["nInvestigators"] = self.nInvestigators
+        
+        result["hackers"] = self.hackers
+        result["whitehats"] = self.whitehats
+        result["investigators"] = self.investigators
 
-        result.append(f"Game Information for {self.gamecode}".center(100, "-"))
-        result.append(f"Gamecode: {self.gamecode}")
-        result.append(f"nPlayers: {len(self.players)}")
+        result["victims"] = self.victims
+        result["hasInvestigated"] = self.hasInvestigated
+        result["nProtections"] = self.nProtections
 
-        result.append(f"Status: {GAME_STATUS[self.status]}")
-        result.append(f"Round Status: {ROUND_STATUS[self.roundStatus]}")
+        return result
 
-        result.append("Configuration".center(100, "-"))
+    def getRoundData(self): # Player-Safe Data
+        result = {}
+        result["gamecode"] = self.gamecode
+        result["status"] = self.status
+        result["roundStatus"] = self.roundStatus
 
-        result.append(f"Max no. of hackers: {self.nHackers}")
-        result.append(f"Max no. of whitehats: {self.nWhitehats}")
-        result.append(f"Max no. of investigators: {self.nInvestigators}")
+        result["victims"] = self.victims
+        result["hasInvestigated"] = self.hasInvestigated
+        result["nProtections"] = self.nProtections
 
-        result.append("Players".center(100, "-"))
-
-        for p in self.players:
-            player = self.players[p]
-            result.append(f"Real Name: {player['name']}")
-            result.append(f"In-Game Alias: {player['alias']}")
-            result.append(f"Role: {player['role']}\n")
-            result.append(f"Status: {player['status']}\n")
-
-        for victim in self.victims:
-            pass
-
-        return "\n".join(result)
+        return result
 
     """
     Initialises the player roles and sets the game and round status to 1 and 0

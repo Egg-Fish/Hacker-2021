@@ -19,6 +19,10 @@
     <input type="text" id="message">
 </div>
 
+<div id="banner">
+    ONION 2021
+</div>
+
 <script defer>
     socket.emit("getPlayerData");
     socket.emit("joinGameRoom");
@@ -28,9 +32,11 @@
     if (event.key === "Enter") {
         // Cancel the default action, if needed
         event.preventDefault();
-        // Trigger the button element with a click
+        
         sendMessage();
+        getGameData();
         }
+
     });
 </script>
 

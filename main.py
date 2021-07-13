@@ -7,7 +7,7 @@ from flask import Flask, send_file, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from flask import render_template, request, redirect, session
 
-from game_logic_r import GameInstance, create_player, GAMES
+from game_logic import GameInstance, create_player, GAMES
 
 NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims"}
 NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /target <alias> to target a victim."}
@@ -222,6 +222,15 @@ def getPlayerData():
     player = GAMES[gamecode].players[name]
 
     emit("playerData", player)
+
+@socketio.on("getRoundData")
+def getRoundData():
+    gamecode = session["gamecode"]
+    game = GAMES[gamecode]
+
+    data = game.getRoundData()
+
+    emit("roundData", data)
 
 # Helper command
 def isAuthorised(player_role, round_status):
