@@ -511,7 +511,7 @@ class GameInstance:
         else:
             return [-1, ""]
 
-        if self.nOffline > 0:
+        if self.nOffline > 0 and self.winner == 0:
             if self.nOnlineHackers == 0:
                 self.winner = 2
                 self.status = 2
