@@ -3,7 +3,7 @@ import time
 import logging
 import os
 
-from statistics import mode
+from collections import Counter
 
 with open("random_names.txt", "r") as f:
     RANDOM_NAMES = f.readlines()
@@ -219,6 +219,9 @@ class GameInstance:
         result["nOffline"] = self.nOffline
         result["nOnline"] = self.nOnline
 
+        result["votes"] = self.votes
+        result["finalVote"] = self.finalVote
+
         return result
 
     def getRoundData(self): # Player-Safe Data
@@ -429,8 +432,8 @@ class GameInstance:
             self.finalRole = ""
 
         else:
-            self.votes = list(set(self.votes))
-            self.finalVote = mode(self.votes)
+            voteCount = Counter(self.votes)
+            self.finalVote = voteCount.most_common(1)[0][0]
             for i in self.players:
                 if self.players[i]["alias"] == self.finalVote:
                     self.players[i]["status"] = "offline"
