@@ -486,7 +486,7 @@ def sendMessage(data):
                 if result == -1:
                     emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
                 elif result == 0:
-                    emit("message", {"sender": "SYSTEM", "message": f"{player['name']} has voted for {m[1]}"}, to=f"{gamecode}/player")
+                    emit("message", {"sender": "SYSTEM", "message": f"{player['alias']} has voted for {m[1]}"}, to=f"{gamecode}/player")
                 elif result == 1:
                     emit("message", {"sender": "SYSTEM", "message": f"All players have voted. Type /c to continue."}, to=f"{gamecode}/player")
 
