@@ -163,6 +163,10 @@ class GameInstance:
         self.finalVictim = ""
         self.finalRole = ""
 
+        self.votes = []
+        self.finalVote = ""
+        self.finalRole = ""
+
         self.nOffline = 0
         self.nOnline = 0
 
@@ -269,6 +273,7 @@ class GameInstance:
             player = self.players[p]
 
             player["alias"] = random.choice(RANDOM_NAMES)
+            player["status"] = "online"
 
             aliases = [self.players[x]["alias"] for x in self.players]
 
@@ -303,7 +308,7 @@ class GameInstance:
         self.roundStatus = 0 # Hackers' turn to speak
         self.victims.clear()
         self.finalVictim = ""
-        self.finalRole = ""
+
         self.continuers = {}
 
     # Removes duplicate names in the list, self.victims.
@@ -390,24 +395,26 @@ class GameInstance:
                     return -2
         return -1
 
+    def votePlayer(self, alias):
+        for i in self.players:
+            if self.players[i]["alias"] == alias:
+                self.votes.append(alias)
+                if len(self.votes) == self.nOnline:
+                    return 1
+                else:
+                    return 0
+        return -1
 
-    # Picks a final victim in self.victims
-    # Returns the name of the final victim
-    # Returns 0 if self.victims is empty (The white hats 
-    # have successfully protected the civilians)
-    def endNight(self):
-        if len(self.victims) == 0:
-            return 0
+    def endDay(self):
+        if len(self.votes) == 0:
+            self.finalVote = ""
+            self.finalRole = ""
+
         else:
-            finalVictim = random.choice(self.victims)
-            self.finalVictim = finalVictim
-            if finalVictim in self.protected:
-                self.finalVictim = ""
-                self.finalRole = ""
-                return 0
-            
+            self.votes = list(set(self.votes))
+            self.finalVote = random.choice(self.votes)
             for i in self.players:
-                if self.players[i]["alias"] == finalVictim:
+                if self.players[i]["alias"] == self.finalVote:
                     self.players[i]["status"] = "offline"
                     self.finalRole = self.players[i]["role"]
                     self.nOffline += 1
@@ -422,22 +429,45 @@ class GameInstance:
                     elif self.players[i]["role"] == "investigator":
                         self.nOnlineInvestigators -= 1
 
-            return finalVictim
+                    return
+
+
+
+    # Picks a final victim in self.victims
+    # Returns the name of the final victim
+    # Returns 0 if self.victims is empty (The white hats 
+    # have successfully protected the civilians)
+    def endNight(self):
+        if len(self.victims) == 0:
+            return 0
+        else:
+            self.finalVictim = random.choice(self.victims)
+            if self.finalVictim in self.protected:
+                self.finalVictim = ""
+                self.finalRole = ""
+                return 0
+            
+            for i in self.players:
+                if self.players[i]["alias"] == self.finalVictim:
+                    self.players[i]["status"] = "offline"
+                    self.finalRole = self.players[i]["role"]
+                    self.nOffline += 1
+                    self.nOnline -= 1
+
+                    if self.players[i]["role"] == "hacker":
+                        self.nOnlineHackers -= 1
+
+                    elif self.players[i]["role"] == "whitehat":
+                        self.nOnlineWhitehats -= 1
+
+                    elif self.players[i]["role"] == "investigator":
+                        self.nOnlineInvestigators -= 1
+
+            return self.finalVictim
 
         
 
-    def continueGame(self):
-        if self.nOffline > 0:
-            if self.nOnlineHackers == 0:
-                self.winner = 2
-                self.status = 2
-                return [4, ""]
-
-            elif self.nOnline - self.nOnlineHackers <= self.nOnlineHackers:
-                self.winner = 1
-                self.status = 2
-                return [4, ""]
-            
+    def continueGame(self):    
         if self.roundStatus == 0 and len(self.continuers) == self.nOnlineHackers:
             self.continuers = {}
             self.startWhitehats()
@@ -448,15 +478,28 @@ class GameInstance:
         
         elif self.roundStatus == 2 and len(self.continuers) == self.nOnlineInvestigators:
             self.continuers = {}
+            self.votes.clear()
             self.endNight()
             self.startCivilians()
         
         elif self.roundStatus == 3 and len(self.continuers) == self.nOnline:
             self.continuers = {}
+            self.endDay()
             self.startHackers()
 
         else:
             return [-1, ""]
+
+        if self.nOffline > 0:
+            if self.nOnlineHackers == 0:
+                self.winner = 2
+                self.status = 2
+                return [4, ""]
+
+            elif self.nOnline - self.nOnlineHackers <= self.nOnlineHackers:
+                self.winner = 1
+                self.status = 2
+                return [4, ""]
 
         return [self.roundStatus, ""]
 

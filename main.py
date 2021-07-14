@@ -9,17 +9,17 @@ from flask import render_template, request, redirect, session
 
 from game_logic import GameInstance, create_player, GAMES
 
-NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims"}
-NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /target <alias> to target a victim."}
-NIGHT_START_MESSAGE_WHITEHATS = {"sender": "SYSTEM", "message": "You are a White Hat. Do /protect <alias> to protect a person from being hacked. Can only be used once per round per white hat."}
-NIGHT_START_MESSAGE_INVESTIGATOR = {"sender": "SYSTEM", "message": "You are the one and only Invesigator. Do /scan <alias> to reveal the role of a person. Can only be used once per round."}
+NIGHT_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has started. The hacker(s) is choosing their victims."}
+NIGHT_START_MESSAGE_HACKERS = {"sender": "SYSTEM", "message": "You are a Hacker. Do /t <alias> to target a victim. Type /c to end your turn."}
+NIGHT_START_MESSAGE_WHITEHATS = {"sender": "SYSTEM", "message": "You are a White Hat. Do /p <alias> to protect a person from being hacked. Can only be used once per round per white hat. Type /c to end your turn."}
+NIGHT_START_MESSAGE_INVESTIGATOR = {"sender": "SYSTEM", "message": "You are the one and only Invesigator. Do /s <alias> to reveal the role of a person. Can only be used once per round. Type /c to end your turn."}
 
 NIGHT_END_HACKERS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The hackers have chosen their victims."}
 NIGHT_END_WHITEHATS_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The white hats have chosen who to protect."}
 NIGHT_END_INVESTIGATOR_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The investigator has revealed the role of a person."}
 
 DAY_START_MESSAGE_ALL = {"sender": "SYSTEM", "message": "The night has ended. Everyone wakes up."}
-DAY_VOTE_MESSAGE_ALL = {"sender": "SYSTEM", "message": "You can now vote for who you think is(are) the hacker(s) using /vote <alias>."}
+DAY_VOTE_MESSAGE_ALL = {"sender": "SYSTEM", "message": "You can now vote for who you think is(are) the hacker(s) using /vote <alias>. Type /c if you wish to skip voting."}
 
 
 logging.basicConfig(
@@ -356,7 +356,13 @@ def sendMessage(data):
             m = message.split(maxsplit=1)
             command = m[0]
 
-            if command == "/continue" or command == "/c":
+            if (command == "/continue" or command == "/c")\
+            and (\
+                (player["role"] == "hacker" and game.roundStatus == 0)\
+                or (player["role"] == "whitehat" and game.roundStatus == 1)\
+                or (player["role"] == "investigator" and game.roundStatus == 2)\
+                or (game.roundStatus == 3)
+            ):
                 game.continuers[name] = 1
                 rs = game.continueGame()
 
@@ -369,6 +375,17 @@ def sendMessage(data):
 
                 if roundStatus == 0:
                     emit("clearChat", to=f"{gamecode}/player")
+                    if game.finalVote and game.finalRole:
+                        emit("message", {
+                            "sender": "SYSTEM", 
+                            "message": f"The player {game.finalVote} has been voted out. The player was a {game.finalRole}"
+                        }, to=f"{gamecode}/player")
+                    else:
+                        emit("message", {
+                            "sender": "SYSTEM", 
+                            "message": "Noone was voted out."
+                        }, to=f"{gamecode}/player")
+
                     emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
                     emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
                     emit("message", {
@@ -428,11 +445,11 @@ def sendMessage(data):
 
                 return
 
-            if len(m) < 2:
+            if len(m) < 2 and (command != "/continue" and command != "/c"):
                 emit("message", {"sender": "SYSTEM", "message": "INVALID COMMAND"})
                 return
 
-            if command == "/target" or command == "/t":
+            if (command == "/target" or command == "/t") and player["role"] == "hacker" and game.roundStatus == 0:
                 result = game.hackVictim(m[1])
                 if result == -1:
                     emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
@@ -441,7 +458,7 @@ def sendMessage(data):
                 
                 logging.debug(f"Command game.hackVictim with parameter {m[1]} returned {result}")
 
-            elif command == "/protect" or command == "/p":
+            elif (command == "/protect" or command == "/p") and player["role"] == "whitehat" and game.roundStatus == 1:
                 result = game.protectPlayer(m[1])
 
                 if result == -1:
@@ -453,7 +470,7 @@ def sendMessage(data):
                 
                 logging.debug(f"Command game.protectPlayer with parameter {m[1]} returned {result}")
 
-            elif command == "/scan" or command == "/s":
+            elif (command == "/scan" or command == "/s") and player["role"] == "investigator" and game.roundStatus == 2:
                 result = game.investigateAlias(m[1])
                 if result == -1:
                     emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
@@ -461,6 +478,26 @@ def sendMessage(data):
                     emit("message", {"sender": "SYSTEM", "message": f"The alias {m[1]} is a {result}"}, to=f"{gamecode}/investigator")
                 
                 logging.debug(f"Command game.investigateAlias with parameter {m[1]} returned {result}")
+
+            elif command == "/vote" and game.roundStatus == 3:
+                result = game.votePlayer(m[1])
+                if result == -1:
+                    emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
+                elif result == 0:
+                    emit("message", {"sender": "SYSTEM", "message": f"{player['name']} has voted for {m[1]}"}, to=f"{gamecode}/player")
+                elif result == 1:
+                    emit("message", {"sender": "SYSTEM", "message": f"All players have voted. Type /c to continue."}, to=f"{gamecode}/player")
+
+                
+
+                
+
+            elif (command == "/target" or command == "/t") \
+            or (command == "/protect" or command == "/p") \
+            or (command == "/scan" or command == "/s") \
+            or (command == "/vote") \
+            or (command == "/continue" or command == "/c"):
+                emit("message", {"sender": "SYSTEM", "message": f"You cannot use this command at this point in time"})
 
             else:
                 logging.debug(f"Command Not Found")
@@ -490,4 +527,9 @@ def getEndGameData():
 
 
 if __name__ == "__main__":
-    socketio.run(app=app, host="0.0.0.0", port="5000", debug=True)
+    socketio.run(
+        app=app, 
+        host="0.0.0.0", 
+        port="5000", 
+        debug=True,
+        ssl_context='adhoc')
