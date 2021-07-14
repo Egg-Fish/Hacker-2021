@@ -503,7 +503,7 @@ class GameInstance:
             self.endNight()
             self.startCivilians()
         
-        elif self.roundStatus == 3 and len(self.continuers) == self.nOnline:
+        elif self.roundStatus == 3 and (len(self.continuers) == self.nOnline or len(self.votes) == self.nOnline):
             self.continuers = {}
             self.endDay()
             self.startHackers()

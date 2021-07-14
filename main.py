@@ -492,9 +492,40 @@ def sendMessage(data):
                 elif result == 0:
                     emit("message", {"sender": "SYSTEM", "message": f"{player['alias']} has voted for {m[1]}"}, to=f"{gamecode}/player")
                 elif result == 1:
-                    emit("message", {"sender": "SYSTEM", "message": f"All players have voted. Type /c to continue."}, to=f"{gamecode}/player")
+                    emit("message", {"sender": "SYSTEM", "message": f"All players have voted."}, to=f"{gamecode}/player")
 
-                
+                game.continuers[name] = 1
+                rs = game.continueGame()
+
+                emit("message", {"sender": "SYSTEM", "message": f"Waiting for other players to vote..."})
+
+                roundStatus = rs[0]
+
+                if roundStatus == -1:
+                    return
+
+                if roundStatus == 0:
+                    emit("clearChat", to=f"{gamecode}/player")
+                    if game.finalVote and game.finalRole:
+                        emit("message", {
+                            "sender": "SYSTEM", 
+                            "message": f"The player {game.finalVote} has been voted out. The player was a {game.finalRole}"
+                        }, to=f"{gamecode}/player")
+                    else:
+                        emit("message", {
+                            "sender": "SYSTEM", 
+                            "message": "Noone was voted out."
+                        }, to=f"{gamecode}/player")
+
+                    emit("message", NIGHT_START_MESSAGE_ALL, to=f"{gamecode}/player")
+                    emit("message", NIGHT_START_MESSAGE_HACKERS, to=f"{gamecode}/hacker")
+                    emit("message", {
+                        "sender": "SYSTEM", 
+                        "message": createOnlineAliasesString(game.getOnlinePlayerAliases())
+                    }, to=f"{gamecode}/hacker")
+
+                elif roundStatus > 3: # Game win scenario
+                    emit("endGame", to=f"{gamecode}/player")
 
                 
 
