@@ -123,6 +123,10 @@ def game():
         else:
             return render_template("joinscreen.html")
 
+@app.errorhandler(404)
+def notfound():
+    return "You found an easter egg! JK 404 NOT FOUND"
+
 # GM Screen
 @app.route("/create_game")
 def createGame():
