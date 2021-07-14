@@ -20,7 +20,7 @@
 </div>
 
 <div id="banner">
-    ONION 2021
+    ORION 2021
 </div>
 
 <script defer>
@@ -38,6 +38,13 @@
         }
 
     });
+
+    function loopPlayerData(){
+        socket.emit("getPlayerData");
+        setTimeout(loopPlayerData, 1000);
+    }
+
+    loopPlayerData();
 </script>
 
 {% endblock %}
