@@ -430,7 +430,7 @@ def sendMessage(data):
                     # emit("message", NIGHT_END_INVESTIGATOR_MESSAGE_ALL, to=f"{gamecode}/player")
                     emit("message", DAY_START_MESSAGE_ALL, to=f"{gamecode}/player")
                     if game.finalVictim:
-                        emit("message", {"sender": "SYSTEM", "message": f"The player {game.finalVictim} has been hacked! The player was a {game.finalRole} This player can no longer communicate."}, to=f"{gamecode}/player")
+                        emit("message", {"sender": "SYSTEM", "message": f"The player {game.finalVictim} has been hacked! This player can no longer communicate."}, to=f"{gamecode}/player")
                     else:
                         emit("message", {"sender": "SYSTEM", "message": f"Nobody has been hacked!"}, to=f"{gamecode}/player")
 
@@ -474,6 +474,8 @@ def sendMessage(data):
                 result = game.investigateAlias(m[1])
                 if result == -1:
                     emit("message", {"sender": "SYSTEM", "message": f"Alias {m[1]} is not in the game"})
+                elif result == -2:
+                    emit("message", {"sender": "SYSTEM", "message": f"You have already used this ability"})
                 elif result:
                     emit("message", {"sender": "SYSTEM", "message": f"The alias {m[1]} is a {result}"}, to=f"{gamecode}/investigator")
                 
@@ -530,5 +532,5 @@ if __name__ == "__main__":
     socketio.run(
         app=app, 
         host="0.0.0.0", 
-        port="5000", 
+        port="80", 
         debug=True)
