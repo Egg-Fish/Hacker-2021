@@ -3,6 +3,8 @@ import time
 import logging
 import os
 
+from statistics import mode
+
 with open("random_names.txt", "r") as f:
     RANDOM_NAMES = f.readlines()
     RANDOM_NAMES = list(map(lambda x:x.strip(), RANDOM_NAMES))
@@ -184,7 +186,6 @@ class GameInstance:
     def add_player(self, player:dict):
 
         self.players.update({player["name"] : player})
-        self.nOnline += 1
 
         logging.info(f"User {player['name']} has joined the game {self.gamecode}")
 
@@ -254,17 +255,33 @@ class GameInstance:
         logging.info(f"[GC: {self.gamecode}] The game is starting")
         self.status = 1 # Game in progress
         self.roundStatus = 0 # Hackers' turn to speak
-        self.hasInvestigated = False # Investigator can investigate
+
+        self.hackers = []
+        self.whitehats = []
+        self.investigators = []
+        self.civilians = []
+
+        self.victims = []
+        self.hasInvestigated = False
         self.nProtections = 0
-        self.protected = {}
+        self.protected = []
+
+        self.winner = 0
+
         self.continuers = {}
         self.finalVictim = ""
         self.finalRole = ""
-        self.winner = 0
-        self.hackers.clear()
-        self.whitehats.clear()
-        self.investigators.clear()
 
+        self.votes = []
+        self.finalVote = ""
+        self.finalRole = ""
+
+        self.nOffline = 0
+        self.nOnline = 0
+
+        self.nOnlineHackers = 0
+        self.nOnlineWhitehats = 0
+        self.nOnlineInvestigators = 0
 
         player_names = [p for p in self.players]
         random.shuffle(player_names) # Randomise the order of the names of players
@@ -274,6 +291,7 @@ class GameInstance:
 
             player["alias"] = random.choice(RANDOM_NAMES)
             player["status"] = "online"
+            self.nOnline += 1
 
             aliases = [self.players[x]["alias"] for x in self.players]
 
@@ -412,7 +430,7 @@ class GameInstance:
 
         else:
             self.votes = list(set(self.votes))
-            self.finalVote = random.choice(self.votes)
+            self.finalVote = mode(self.votes)
             for i in self.players:
                 if self.players[i]["alias"] == self.finalVote:
                     self.players[i]["status"] = "offline"
