@@ -124,7 +124,7 @@ def game():
             return render_template("joinscreen.html")
 
 @app.errorhandler(404)
-def notfound():
+def notfound(e):
     return "You found an easter egg! JK 404 NOT FOUND"
 
 # GM Screen
