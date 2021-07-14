@@ -76,7 +76,7 @@ socket.on("message", function(data){
     var sender = data["sender"];
     var message = data["message"];
 
-    document.getElementById("output").innerText += sender + ": " + message + "\n";
+    document.getElementById("output").innerHTML += sender + ": " + message + "<br>";
 });
 
 function getRoundData(){
@@ -140,6 +140,7 @@ function clearChat(){
 
 socket.on("clearChat", function(){
     document.getElementById("output").innerText = "";
+    document.getElementById("output").innerHTML = "";
 });
 
 

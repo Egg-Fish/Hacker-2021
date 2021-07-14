@@ -324,9 +324,14 @@ def isAuthorised(player_role, round_status):
 
 def createOnlineAliasesString(l):
     result = ["Current Online Players:"]
+    i = 1
 
     for alias in l:
-        result.append(alias)
+        result.append("<br><b>")
+        result.append(f"{i}. {alias}")
+        result.append("</b>")
+
+        i += 1
 
     return "\n".join(result)
 
