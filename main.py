@@ -81,6 +81,13 @@ def test(path):
     session["role"] = "hacker"
     session["alias"] = "sussybaka"
 
+
+    if path == "game.html":
+        dummygame.startGame()
+        dummygame.startHackers()
+        socketio.join_room("dummygame/player")
+        socketio.join_room("dummygame/hacker")
+
     if path == "endscreen.html":
         dummygame.winner = random.randint(1,2)
     
