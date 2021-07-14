@@ -23,7 +23,7 @@ DAY_VOTE_MESSAGE_ALL = {"sender": "SYSTEM", "message": "You can now vote for who
 
 
 logging.basicConfig(
-    filename=f"logs\log.log", 
+    filename="logs\log.log",
     filemode="w+", 
     level=logging.DEBUG, 
     format='[%(asctime)s][%(funcName)s][%(levelname)s]:%(message)s')
