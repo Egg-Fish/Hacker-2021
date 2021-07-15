@@ -106,14 +106,27 @@ def testMessages():
     printGameInstance(GAMES["testmessages"]["GameInstance"])
     printGameController(GAMES["testmessages"]["GameController"])
 
+def createTestSocket():
+    addGame("testsocket", socketio)
+
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(24)
 
 socketio = SocketIO(app, async_mode="eventlet")
 
-testMessages()
+# testMessages()
+
+@app.route("/testsocket")
+def testSocket():
+    return render_template("testsocket.html")
+
+@socketio.event
+def testSocket():
+    GAMES["testsocket"]["SocketController"].joinSocketRoom("SUS")
+    print("AOK BRO")
 
 
 if __name__=="__main__":
-    # socketio.run(app=app, host="0.0.0.0", port=80, debug=True)
+    socketio.run(app=app, host="0.0.0.0", port=80, debug=True)
     pass

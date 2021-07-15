@@ -38,7 +38,7 @@ class SocketController:
 
     def joinSocketRoom(self, name:str):
         # Note - Add the client to self.clients and to room <gamecode>/<SID>
-        pass
+        self.socketio.join_room("SUSSY BAKA")
 
     def sendMessagesToRoom(self, messages:List[str], room:str = "") -> None:
         # Defaults to sending to <gamecode> (a.k.a Players + Spectators)
