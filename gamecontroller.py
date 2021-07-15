@@ -8,11 +8,17 @@ and the Flask application itself. It has the ability to invoke any methods of
 the three (except for socket communication).
 """
 from typing import List, Set, Dict, Tuple, Optional
+from collections import Counter
+import os, sys
+import logging
+import time
+import math
+import random
 
 from gameinstance import GameInstance
 from socketcontroller import SocketController
 
-from player import Player
+from player import Player, GAMEMASTER_PLAYER, HACKER_PLAYER, WHITEHAT_PLAYER, INVESTIGATOR_PLAYER, CIVILIAN_PLAYER
 """
 Implementation Notes:
 Communication at night:
@@ -28,14 +34,16 @@ Communication at night:
 
 """
 class GameController:
-    def __init__(self, gamecode:str, gameinstance:GameInstance, SocketController:SocketController):
+    def __init__(self, gamecode:str, gameinstance:GameInstance, socketcontroller:SocketController):
         self.gamecode = gamecode
         self.gameinstance = gameinstance
-        self.socketcontroller : SocketController
+        self.socketcontroller = socketcontroller
 
         self.victims = []
         self.protected = []
         self.scanned = []
+
+        self.finalVictim = None
 
         self.votes = {}
         self.continues = {}
@@ -45,6 +53,66 @@ class GameController:
         self.whitehatMessages = []
         self.investigatorMessages = []
         self.civilianMessages = []
+
+        self.isDay = False
+
+    def startGame(self) -> None:
+        # Players are not at game.html yet
+        self.victims = []
+        self.protected = []
+        self.scanned = []
+
+        self.finalVictim = None
+
+        self.votes = {}
+        self.continues = {}
+
+        self.messages = []
+        self.hackerMessages = []
+        self.whitehatMessages = []
+        self.investigatorMessages = []
+        self.civilianMessages = []
+
+        self.isDay = False
+
+        self.gameinstance.resetAllPlayers()
+
+        # random.shuffle(self.gameinstance.players)
+
+        for playerobj in self.gameinstance.players:
+            if len(self.gameinstance.hackers) != self.gameinstance.maxHackers:
+                playerobj.setRole("hacker")
+                self.gameinstance.hackers.append(playerobj)
+
+            elif len(self.gameinstance.whitehats) != self.gameinstance.maxWhitehats:
+                playerobj.setRole("whitehat")
+                self.gameinstance.whitehats.append(playerobj)
+
+            elif len(self.gameinstance.investigators) != self.gameinstance.maxInvestigators:
+                playerobj.setRole("investigator")
+                self.gameinstance.investigators.append(playerobj)
+
+            else:
+                playerobj.setRole("civilian")
+                self.gameinstance.civilians.append(playerobj)
+
+        # Add predefined messages here
+
+        # Send reloadPage event to players. Game has started
+
+        self.socketcontroller.sendDataToRoom("gameStart", event="reloadPage")
+
+    def endGame(self) -> None:
+        # Ask all players to refresh
+        # Winner wouldve been set before this call
+        self.status = 2
+        self.isDay = True
+        self.addMessage(CIVILIAN_PLAYER, f"AYO SOMEONE WON")
+
+        self.socketcontroller.sendDataToRoom("gameEnd", event="reloadPage")
+
+
+        
 
     def addPlayer(self, playerobj:Player):
         self.gameinstance.players.append(playerobj)
@@ -59,16 +127,81 @@ class GameController:
     def handleMessage(self, playerName, data) -> int:
         # JS emits sent with the "message" event are handled here
         # Returns -1 if there was an error
+        # The GAMEMASTER user will go through the command event handler
+        playerobj = self.gameinstance.getPlayerFromName(playerName)
+        message = data
+
+        if not playerobj:
+            return -1
+
+        if self.isAllowedToSpeak(playerobj) and message[0] != '/':
+            if self.isDay:
+                self.addMessage(playerobj, message)
+            else:
+                self.addMessageToRole(playerobj, message)
+
+        elif self.isAllowedToSpeak(playerobj) and message[0] == '/':
+            command, number = message.strip().split(maxsplit=1)
+            if command in ["/v", "/vote"] and self.isDay:
+                self.voteAlias(playerobj, number)
+                return
+
+            if command in ["/t", "/target"]:
+                self.targetAlias(playerobj, number)
+                return
+
+            if command in ["/p", "/protect"]:
+                self.protectAlias(playerobj, number)
+                return
+
+            if command in ["/s", "/scan"]:
+                self.scanAlias(playerobj, number)
+                return
         pass
 
     def handleCommand(self, playerName, data) -> int:
         # JS emits sent with the "command" event are handled here
         # Returns -1 if command is not found
+        playerobj = self.gameinstance.getPlayerFromName(playerName)
+        command = data.strip()
+
+        if not playerobj and playerName != "GAMEMASTER":
+            return -1
+
+        if command == "inWaitingRoom":
+            return
+
+        if command == "inGameRoom":
+            return
+
+        if command == "inEndgameRoom":
+            return
+
+        if playerName == "GAMEMASTER":
+            # Admin commands
+            if command == "startGame":
+                self.startGame()
+                return
+            
+            if command == "endGame":
+                self.endGame()
+                return
+
+            if command.split(":")[0].strip() == "sendMessage":
+                # command = "sendMessage:Hello World!"
+                self.addMessageToAll(GAMEMASTER_PLAYER, command.split(":")[1].strip())
+                return
+        
         pass
 
     def authorMessage(self, playerobj:Player) -> str:
         fs = "{}@{}: "
-        return fs.format(playerobj.getAlias(), self.gamecode)
+        if playerobj.getName() == "GAMEMASTER":
+            return fs.format("GAMEMASTER", self.gamecode)
+        if self.isDay:
+            return fs.format(playerobj.getAlias(), self.gamecode)
+        else:
+            return fs.format("Anonymous", self.gamecode)
 
     def addMessage(self, playerobj, message):
         message = self.authorMessage(playerobj) + message
@@ -90,6 +223,16 @@ class GameController:
         else:
             self.messages.append(message)
 
+    def addMessageToAll(self, playerobj:Player, message):
+        # GAMEMASTER COMMAND
+        message = self.authorMessage(playerobj) + message
+
+        self.hackerMessages.append(message)
+        self.whitehatMessages.append(message)
+        self.investigatorMessages.append(message)
+        self.civilianMessages.append(message)
+        self.messages.append(message)
+
     def getMessages(self) -> List[str]:
         return self.messages
 
@@ -108,45 +251,289 @@ class GameController:
     def isAllowedToSpeak(self, playerobj:Player) -> bool:
         playerRole = playerobj.getRole()
 
+        if playerRole == "spectator":
+            return False
+
+        if playerobj.getStatus() != "online":
+            return False
+
+        if self.isDay:
+            return True
+
+        if playerRole == "civilian" and self.isDay:
+            return True
+
+        if playerRole in ["hacker", "whitehat", "investigator"] and not self.isDay:
+            return True
+
+        return False
+
     def clearMessages(self, role="") -> None:
-        pass
+        if role:
+            if role == "hacker":
+                return self.hackerMessages.clear()
+            elif role == "whitehat":
+                return self.whitehatMessages.clear()
+            elif role == "investigator":
+                return self.investigatorMessages.clear()
+            elif role == "civilian":
+                return self.civilianMessages.clear()
+        else:
+            self.messages.clear()
+            self.hackerMessages.clear()
+            self.whitehatMessages.clear()
+            self.investigatorMessages.clear()
+            self.civilianMessages.clear()
+
+    def targetAlias(self, playerobj:Player, number:str) -> int:
+        # Note - Number is derived from the position of the
+        # result of self.gameinstance.getOnlinePlayers()
+        if not playerobj or not number.isdigit():
+            return -1
+
+        if playerobj.getRole() != "hacker":
+            return -1
+        
+        players = self.gameinstance.getOnlinePlayers()
+        # raise Exception(players)
+        index = int(number)
+        
+        if len(self.victims) == len(self.gameinstance.getOnlinePlayersFromRole("hacker")):
+            # Can no longer target
+            self.addMessageToRole(HACKER_PLAYER, f"The hackers have already chosen {len(self.victims)} victim(s) to target.")
+            return -1
+        
+        if index == 0:
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(HACKER_PLAYER, "A hacker has chosen to target nobody.")
+            return 0
+
+        if index >= (len(players) + 1) or index < 0: # Illegal number
+            self.addMessageToRole(HACKER_PLAYER, f"Invalid number {index} chosen by a hacker.")
+            return -1
+
+        else:
+            self.victims.append(players[index - 1])
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(HACKER_PLAYER, f"The player {players[index - 1].getAlias()} has been targeted.")
+            
+            return 0
 
 
+    def protectAlias(self, playerobj:Player, number:str) -> int:
+        # Note - Number is derived from the position of the
+        # result of self.gameinstance.getOnlinePlayers()
+        if not playerobj or not number.isdigit():
+            return -1
 
-    def targetAlias(self, playerobj:Player, alias) -> int:
-        pass
+        if playerobj.getRole() != "whitehat":
+            return -1
+        
+        players = self.gameinstance.getOnlinePlayers()
+        # raise Exception(players)
+        index = int(number)
+        
+        if len(self.protected) == len(self.gameinstance.getOnlinePlayersFromRole("whitehat")):
+            # Can no longer target
+            self.addMessageToRole(WHITEHAT_PLAYER, f"The white hats have already chosen {len(self.protected)} player(s) to protect.")
+            return -1
+        
+        if index == 0:
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(WHITEHAT_PLAYER, "A white hat has chosen to protect nobody.")
+            return 0
 
-    def protectAlias(self, playerobj:Player, alias) -> int:
-        pass
+        if index >= (len(players) + 1) or index < 0: # Illegal number
+            self.addMessageToRole(WHITEHAT_PLAYER, f"Invalid number {index} chosen by a white hat.")
+            return -1
 
-    def scanAlias(self, playerobj:Player, alias) -> int:
-        pass
+        else:
+            self.protected.append(players[index - 1])
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(WHITEHAT_PLAYER, f"The player {players[index - 1].getAlias()} has been protected.")
+            
+            return 0
 
-    def voteAlias(self, playerobj:Player, alias) -> int:
-        pass
+    def scanAlias(self, playerobj:Player, number:str) -> int:
+        # Note - Number is derived from the position of the
+        # result of self.gameinstance.getOnlinePlayers()
+        if not playerobj or not number.isdigit():
+            return -1
+
+        if playerobj.getRole() != "investigator":
+            return -1
+        
+        players = self.gameinstance.getOnlinePlayers()
+        # raise Exception(players)
+        index = int(number)
+        
+        if len(self.scanned) == len(self.gameinstance.getOnlinePlayersFromRole("investigator")):
+            # Can no longer target
+            self.addMessageToRole(INVESTIGATOR_PLAYER, f"The investigators have already chosen {len(self.scanned)} player(s) to scan.")
+            return -1
+        
+        if index == 0:
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(INVESTIGATOR_PLAYER, "An investigator has chosen to scan nobody.")
+            return 0
+
+        if index >= (len(players) + 1) or index < 0: # Illegal number
+            self.addMessageToRole(INVESTIGATOR_PLAYER, f"Invalid number {index} chosen by an investigator.")
+            return -1
+
+        else:
+            self.scanned.append(players[index - 1])
+            self.continues[playerobj.getName()] = 1
+            self.addMessageToRole(INVESTIGATOR_PLAYER, f"The player {players[index - 1].getAlias()} is a {players[index - 1].getRole()}.")
+            
+            return 0
+
+    def voteAlias(self, playerobj:Player, number:str) -> int:
+        # Note - Number is derived from the position of the
+        # result of self.gameinstance.getOnlinePlayers()
+        if not playerobj or not number.isdigit():
+            return -1
+        
+        players = self.gameinstance.getOnlinePlayers()
+        # raise Exception(players)
+        index = int(number)
+        
+        if index == 0:
+            self.continues[playerobj.getName()] = 1
+            self.addMessage(CIVILIAN_PLAYER, f"{playerobj.getAlias()} has chosen not to vote for anyone.")
+            return 0
+
+        if index >= (len(players) + 1) or index < 0: # Illegal number
+            self.addMessage(CIVILIAN_PLAYER, f"Invalid number {index} chosen by {playerobj.getAlias()}.")
+            return -1
+
+        else:
+            self.votes.update({playerobj.getAlias(): players[index - 1]})
+            self.continues[playerobj.getName()] = 1
+            self.addMessage(CIVILIAN_PLAYER, f"The player {playerobj.getAlias()} has voted for {players[index - 1].getAlias()}.")
+            
+            return 0
 
     def hasEveryoneVoted(self) -> bool:
         # Note - Do not count offline H/WH/I/C
-        pass
+        nOnlinePlayers = len(self.gameinstance.getOnlinePlayers())
+
+        if len(self.votes) == nOnlinePlayers:
+            return True
+        else:
+            return False
 
     def hasEveryoneContinued(self) -> bool:
         # Note - Do not count offline H/WH/I/C
         # Note - A use of a command will update the continue state also
+        nOnlinePlayers = len(self.gameinstance.getOnlinePlayers())
+        nOnlineCivilians = len(self.gameinstance.getOnlinePlayersFromRole("civilian"))
 
-        pass
+        if self.isDay:
+            if nOnlinePlayers == len(self.continues):
+                return True
+        
+        else:
+            if nOnlinePlayers - nOnlineCivilians == len(self.continues):
+                return True
+
+        return False
 
 
     def startNight(self) -> None:
+        self.victims = []
+        self.protected = []
+        self.scanned = []
+
+        self.finalVictim = None
+
+        self.votes = {}
+        self.continues = {}
+
+        self.clearMessages()
+
+        self.isDay = False
         pass
+
 
     def endNight(self) -> str:
-        pass
+        # Note - Will implement the messaging
+        self.clearMessages()
+
+        self.finalVictim = random.choice(self.victims)
+
+        random.shuffle(self.protected)
+        if self.finalVictim == self.protected[0]:
+            # Protected
+            pass
+        else:
+            # Hacked
+            self.finalVictim.setStatus("hacked")
+
 
     def startDay(self) -> None:
-        pass
+        self.isDay = True
+
+        if self.finalVictim == self.protected[0]:
+            # Protected
+            self.addMessage(CIVILIAN_PLAYER, "Nobody was hacked.")
+            
+        else:
+            # Hacked
+            self.addMessage(CIVILIAN_PLAYER, f"The player {self.finalVictim.getAlias()} has been hacked. The player can no longer communicate.")
+            
+        self.votes = {}
+        self.continues = {}
+
 
     def endDay(self) -> str:
-        pass
+        # Note - Will implement the messaging
+        self.clearMessages()
+
+        if len(self.votes) == 0:
+            self.addMessage(CIVILIAN_PLAYER, f"Noone has been voted out.")
+            return
+
+        votes = Counter(self.votes.values())
+        finalVoteAlias = votes.most_common(1)[0][0].getAlias()
+
+        playerobj = self.gameinstance.getPlayerFromAlias(finalVoteAlias)
+
+        self.addMessage(CIVILIAN_PLAYER, f"The player {finalVoteAlias} has been voted out. The player was a {playerobj.getRole()}")
+
+        playerobj.setStatus("voted out")
+        
+            
+        
+
+
+    def updateGame(self):
+        if self.hasEveryoneContinued() and not self.isDay:
+            self.endNight()
+            self.startDay()
+
+        elif (self.hasEveryoneContinued() or self.hasEveryoneVoted()) \
+        and self.isDay:
+            self.endDay()
+            self.startNight()
+
+        # Check for win
+
+        nHackers = len(self.gameinstance.getOnlinePlayersFromRole("hacker"))
+        nOnline = len(self.gameinstance.getOnlinePlayers())
+        if nHackers == 0:
+            # Players win
+            self.winner = 2
+            self.endGame()
+            return
+
+        if nOnline - nHackers <= nHackers: 
+            # If there are 2 online hackers, they win if 4 people are left.
+            self.winner = 1
+            self.endGame()
+
+
+            
 
 def printGameController(gc: GameController, printResult=True):
     result = []

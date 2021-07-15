@@ -8,6 +8,7 @@ will contain are helper methods to gather the data for the GameController to
 process. This will also contain a few setter methods that have the sole purpose
 of abstracting logic from the GameController object.
 """
+import random
 
 from player import Player
 
@@ -41,11 +42,11 @@ class GameInstance:
         return self.players
 
     def getOnlinePlayers(self):
-        result = list(filter(lambda obj: obj.status == "online", self.players))
+        result = list(filter(lambda obj: obj.getStatus() == "online", self.players))
         return result
 
     def getOfflinePlayers(self):
-        result = list(filter(lambda obj: obj.status != "online", self.players))
+        result = list(filter(lambda obj: obj.getStatus() != "online", self.players))
         return result
 
     def getOnlinePlayersFromRole(self, roleName):
@@ -84,6 +85,21 @@ class GameInstance:
 
     def getWinner(self) -> int:
         return self.winner
+
+    def resetAllPlayers(self):
+        [x.resetPlayer() for x in self.players]
+
+        with open(self.aliasFilename, "r") as f:
+            randomaliases = f.readlines()
+            for playerobj in self.players:
+
+                alias = random.choice(randomaliases).strip()
+                aliases = [x.getAlias() for x in self.players]
+
+                while alias in aliases:
+                    alias = random.choice(randomaliases).strip()
+
+                playerobj.setAlias(alias)
 
 def printGameInstance(gi: GameInstance, printResult=True) -> str:
     result = []
