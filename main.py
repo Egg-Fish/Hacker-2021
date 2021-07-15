@@ -6,9 +6,11 @@ import math
 from flask import Flask, request, session, render_template, redirect
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
-from gameinstance import GameInstance
+from gameinstance import GameInstance, printGameInstance
 from socketcontroller import SocketController
-from gamecontroller import GameController
+from gamecontroller import GameController, printGameController
+
+from player import Player
 
 GAMES = {}
 """dict[
@@ -42,12 +44,29 @@ def addGame(gamecode,
         "SocketController": socketcontroller
     }
 
+def createTestGame():
+    addGame("oriontestgame", socketio)
+
+    testPlayer = Player("TEST")
+    testPlayer.setAlias("TEST")
+
+    for i in range(1, 7):
+        dummy = Player(f"dummy{i}")
+        GAMES["oriontestgame"]["GameController"].addPlayer(dummy)
+
+    GAMES["oriontestgame"]["GameController"].addMessage(testPlayer, "Testing Public Message")
+
+    printGameInstance(GAMES["oriontestgame"]["GameInstance"])
+    printGameController(GAMES["oriontestgame"]["GameController"])
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(24)
 
 socketio = SocketIO(app, async_mode="eventlet")
 
-addGame("oriontestgame", socketio)
+createTestGame()
+
 
 if __name__=="__main__":
-    socketio.run(app=app, host="0.0.0.0", port=80, debug=True)
+    # socketio.run(app=app, host="0.0.0.0", port=80, debug=True)
+    pass

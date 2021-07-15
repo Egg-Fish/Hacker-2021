@@ -33,9 +33,9 @@ class GameController:
         self.gameinstance = gameinstance
         self.socketcontroller : SocketController
 
-        self.victims = {}
-        self.protected = {}
-        self.scanned = {}
+        self.victims = []
+        self.protected = []
+        self.scanned = []
 
         self.votes = {}
         self.continues = {}
@@ -47,9 +47,13 @@ class GameController:
         self.civilianMessages = []
 
     def addPlayer(self, playerobj:Player):
+        self.gameinstance.players.append(playerobj)
         pass
 
     def removePlayer(self, playerName:str):
+        playerobj = self.gameinstance.getPlayerFromName(playerName)
+        if playerobj:
+            self.gameinstance.players.remove(playerobj)
         pass
 
     def handleMessage(self, playerName, data) -> int:
@@ -62,38 +66,63 @@ class GameController:
         # Returns -1 if command is not found
         pass
 
-    def addMessage(self, playerobj, message):
-        pass
+    def authorMessage(self, playerobj:Player) -> str:
+        fs = "{}@{}: "
+        return fs.format(playerobj.getAlias(), self.gamecode)
 
-    def addMessageToRole(self, playerobj, message):
+    def addMessage(self, playerobj, message):
+        message = self.authorMessage(playerobj) + message
+        self.messages.append(message)
+
+    def addMessageToRole(self, playerobj:Player, message):
         # Uses the role found in playerobj
-        pass
+        message = self.authorMessage(playerobj) + message
+        playerRole = playerobj.getRole()
+
+        if playerRole == "hacker":
+            self.hackerMessages.append(message)
+        elif playerRole == "whitehat":
+            self.whitehatMessages.append(message)
+        elif playerRole == "investigator":
+            self.investigatorMessages.append(message)
+        elif playerRole == "civilian":
+            self.civilianMessages.append(message)
+        else:
+            self.messages.append(message)
 
     def getMessages(self) -> List[str]:
-        # ADMIN COMMAND
-        pass
+        return self.messages
 
     def getMessagesForRole(self, role) -> List[str]:
-        pass
+        if role == "hacker":
+            return self.hackerMessages
+        elif role == "whitehat":
+            return self.whitehatMessages
+        elif role == "investigator":
+            return self.investigatorMessages
+        elif role == "civilian":
+            return self.civilianMessages
+        else:
+            return self.messages
 
-    def isAllowedToSpeak(self, playerobj) -> bool:
-        pass
+    def isAllowedToSpeak(self, playerobj:Player) -> bool:
+        playerRole = playerobj.getRole()
 
     def clearMessages(self, role="") -> None:
         pass
 
 
 
-    def targetAlias(self, playerobj, alias) -> int:
+    def targetAlias(self, playerobj:Player, alias) -> int:
         pass
 
-    def protectAlias(self, playerobj, alias) -> int:
+    def protectAlias(self, playerobj:Player, alias) -> int:
         pass
 
-    def scanAlias(self, playerobj, alias) -> int:
+    def scanAlias(self, playerobj:Player, alias) -> int:
         pass
 
-    def voteAlias(self, playerobj, alias) -> int:
+    def voteAlias(self, playerobj:Player, alias) -> int:
         pass
 
     def hasEveryoneVoted(self) -> bool:
@@ -119,3 +148,70 @@ class GameController:
     def endDay(self) -> str:
         pass
 
+def printGameController(gc: GameController, printResult=True):
+    result = []
+
+    result.append(f"Game Code: {gc.gamecode}")
+    
+    result.append(f"\nVictims:")
+    for playerobj in gc.victims:
+        result.append(f"Name: {playerobj.name}\n"
+            f"Alias: {playerobj.alias}\n"
+            f"Role: {playerobj.role}\n"
+            f"Status: {playerobj.status}\n"
+            f"isHacked: {playerobj.isHacked}\n"
+            f"isVoted: {playerobj.isVoted}\n")
+
+    result.append(f"\nProtected:")
+    for playerobj in gc.protected:
+        result.append(f"Name: {playerobj.name}\n"
+            f"Alias: {playerobj.alias}\n"
+            f"Role: {playerobj.role}\n"
+            f"Status: {playerobj.status}\n"
+            f"isHacked: {playerobj.isHacked}\n"
+            f"isVoted: {playerobj.isVoted}\n")
+
+    result.append(f"\nScanned:")
+    for playerobj in gc.scanned:
+        result.append(f"Name: {playerobj.name}\n"
+            f"Alias: {playerobj.alias}\n"
+            f"Role: {playerobj.role}\n"
+            f"Status: {playerobj.status}\n"
+            f"isHacked: {playerobj.isHacked}\n"
+            f"isVoted: {playerobj.isVoted}\n")
+
+    result.append(f"\nVotes:")
+    for voter in gc.votes:
+        result.append(f"Voter: {voter}\n"
+            f"Votee: {gc.votes[voter]}\n")
+
+    result.append(f"\nContinues:")
+    for continuer in gc.continues:
+        result.append(f"Continuer: {continuer}\n"
+            f"Value: {gc.continues[continuer]}\n")
+
+    result.append("\nPublic Messages:")
+    for message in gc.messages:
+        result.append(message)
+
+    result.append("\nHacker Messages:")
+    for message in gc.hackerMessages:
+        result.append(message)
+
+    result.append("\nWhite Hat Messages:")
+    for message in gc.whitehatMessages:
+        result.append(message)
+
+    result.append("\nInvestigator Messages:")
+    for message in gc.investigatorMessages:
+        result.append(message)
+
+    result.append("\nCivilian Messages:")
+    for message in gc.civilianMessages:
+        result.append(message)
+
+    result = "\n".join(result)
+    if printResult:
+        print(result)
+
+    return result

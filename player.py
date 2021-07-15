@@ -36,22 +36,22 @@ class Player:
         return self.name
 
     def setAlias(self, alias):
-        pass
+        self.alias = alias
 
     def getAlias(self):
-        pass
+        return self.alias
 
     def setRole(self, role):
-        pass
+        self.role = role
 
     def getRole(self):
-        pass
+        return self.role
 
     def setStatus(self, status):
-        pass
+        self.status = status
 
     def getStatus(self):
-        pass
+        return self.status
 
     def setHacked(self):
         self.isHacked = True

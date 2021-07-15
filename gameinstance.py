@@ -38,36 +38,75 @@ class GameInstance:
         self.aliasFilename = aliasFilename
 
     def getPlayers(self):
-        pass
+        return self.players
 
     def getOnlinePlayers(self):
-        pass
+        result = list(filter(lambda obj: obj.status == "online", self.players))
+        return result
 
     def getOfflinePlayers(self):
-        pass
+        result = list(filter(lambda obj: obj.status != "online", self.players))
+        return result
 
     def getOnlinePlayersFromRole(self, roleName):
-        pass
+        onlineplayers = self.getOnlinePlayers()
+        result = list(filter(lambda obj: obj.role == roleName, onlineplayers))
+        return result
 
 
     def setPlayerStatus(self, playerName, status):
-        pass
+        for player in self.players:
+            if player.getName() == playerName:
+                player.setStatus(status)
 
-    def setPlayerRole(self, playerName, status):
-        pass
+    def setPlayerRole(self, playerName, role):
+        for player in self.players:
+            if player.getName() == playerName:
+                player.setRole(role)
 
-    def setPlayerAlias(self, playerName, status):
-        pass
+    def setPlayerAlias(self, playerName, alias):
+        for player in self.players:
+            if player.getName() == playerName:
+                player.setAlias(alias)
 
     def getPlayerFromName(self, playerName) -> Player:
-        pass
+        for player in self.players:
+            if player.getName() == playerName:
+                return player
 
     def getPlayerFromAlias(self, playerAlias) -> Player:
-        pass
-
+        for player in self.players:
+            if player.getAlias() == playerAlias:
+                return player
 
     def getGameStatus(self) -> int:
-        pass
+        return self.status
 
     def getWinner(self) -> int:
-        pass
+        return self.winner
+
+def printGameInstance(gi: GameInstance, printResult=True) -> str:
+    result = []
+
+    result.append(f"Game Code: {gi.gamecode}")
+    result.append(f"Status: {gi.status}")
+    result.append(f"Winner: {gi.winner}")
+    result.append(f"maxHackers: {gi.maxHackers}")
+    result.append(f"maxWhitehats: {gi.maxWhitehats}")
+    result.append(f"maxInvestigators: {gi.maxInvestigators}")
+
+    result.append(f"\nPlayers: {len(gi.players)}")
+
+    for playerobj in gi.players:
+        result.append(f"Name: {playerobj.getName()}\n"
+            f"Alias: {playerobj.getAlias()}\n"
+            f"Role: {playerobj.getRole()}\n"
+            f"Status: {playerobj.getStatus()}\n"
+            f"isHacked: {playerobj.isHacked}\n"
+            f"isVoted: {playerobj.isVoted}\n")
+
+    result = "\n".join(result)
+    if printResult:
+        print(result)
+
+    return result
