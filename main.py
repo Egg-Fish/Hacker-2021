@@ -3,7 +3,7 @@ import logging
 import time
 import math
 
-from flask import Flask, request, session, render_template, redirect
+from flask import Flask, request, session, render_template, redirect, send_file
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
 from gameinstance import GameInstance, printGameInstance
@@ -116,15 +116,20 @@ app.config["SECRET_KEY"] = os.urandom(24)
 socketio = SocketIO(app, async_mode="eventlet")
 
 # testMessages()
+createTestSocket()
 
 @app.route("/testsocket")
 def testSocket():
     return render_template("testsocket.html")
 
+@app.route("/socket/socket.io.js")
+def sendSocketLibrary():
+    return send_file("socket/socket.io.js")
+
 @socketio.event
 def testSocket():
-    GAMES["testsocket"]["SocketController"].joinSocketRoom("SUS")
-    print("AOK BRO")
+    join_room("sussybaka")
+    GAMES["testsocket"]["SocketController"].sendDataToRoom("SKRT", "sussybaka", "reloadPage")
 
 
 if __name__=="__main__":
