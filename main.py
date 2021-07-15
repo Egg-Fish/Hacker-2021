@@ -2,6 +2,8 @@ import os, sys
 import logging
 import time
 import math
+import string
+import random
 
 from flask import Flask, request, session, render_template, redirect, send_file
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
@@ -109,6 +111,8 @@ def testMessages():
 def createTestSocket():
     addGame("testsocket", socketio)
 
+def generateSID(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(24)
@@ -120,17 +124,31 @@ createTestSocket()
 
 @app.route("/testsocket")
 def testSocket():
+    session["name"] = "test"
+    session["gamecode"] = "testsocket"
     return render_template("testsocket.html")
+
+@socketio.event
+def testSocket():
+    join_room("testsocket/tester")
+    SID = generateSID()
+    join_room(f"{SID}")
+
+    print(SID)
+
+    name = session["name"]
+    gamecode = session["gamecode"]
+
+    GAMES[gamecode]["SocketController"].addClientToController(name, SID)
+    GAMES[gamecode]["SocketController"].sendDataToRoom("SKRT1!", "tester", "reloadPage")
+    GAMES[gamecode]["SocketController"].sendDataToClient("SKRT2?", name, "reloadPage")
+
+
+# Actual Code
 
 @app.route("/socket/socket.io.js")
 def sendSocketLibrary():
     return send_file("socket/socket.io.js")
-
-@socketio.event
-def testSocket():
-    join_room("sussybaka")
-    GAMES["testsocket"]["SocketController"].sendDataToRoom("SKRT", "sussybaka", "reloadPage")
-
 
 if __name__=="__main__":
     socketio.run(app=app, host="0.0.0.0", port=80, debug=True)

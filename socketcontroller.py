@@ -36,6 +36,9 @@ class SocketController:
         self.socketio = socketio
         self.clients = {} # dict[name: sid]
 
+    def addClientToController(self, name:str, SID:str):
+        self.clients.update({name: SID})
+
     def sendMessagesToRoom(self, messages:List[str], room:str = "") -> None:
         # Defaults to sending to <gamecode> (a.k.a Players + Spectators)
         pass
@@ -46,8 +49,15 @@ class SocketController:
 
     def sendDataToRoom(self, data, room:str = "", event:str="data") -> None:
         # Defaults to sending to <gamecode> (a.k.a Players + Spectators)
-        self.socketio.emit("reloadPage", to=room)
+        socketRoom = self.gamecode + "/" + room
+
+        if not room:
+            socketRoom = self.gamecode
+
+        self.socketio.emit(event, data, to=socketRoom)
 
     def sendDataToClient(self, data, name:str, event:str="data") -> None:
         # Sends to room <gamecode>/<SID>
-        pass
+        socketRoom = self.clients[name]
+
+        self.socketio.emit(event, data, to=socketRoom)
