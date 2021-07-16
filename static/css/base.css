@@ -20,7 +20,19 @@ Blue : #1E48EF
 
 html
 {
-    background-color: var(--bg-colour);
+    background-color:black;
     font-family: 'Open Sans', sans-serif;
     color: white;
+}
+
+h1{
+    margin: 0px;
+    font-size: 80px;
+    font-style: bold;
+}
+
+h2{
+    margin: 0px;
+    font-size: 30px;
+    font-weight: 300;
 }
