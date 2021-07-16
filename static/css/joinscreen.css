@@ -42,17 +42,8 @@ button{
     background-color: green;
 }
 
-#background{
-    animation: fadeIn 3s;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    overflow: hidden;
-}
-
 #content{
-    animation: fadeInContent 3s;
+    animation: fadeInContent85 3s;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -72,17 +63,6 @@ button{
 
 #content h1+h2+input+button{
     opacity: 1;
-}
-
-@keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
-}
-
-@keyframes fadeInContent {
-    0% {opacity:0;}
-    30% {opacity:0;}
-    100% {opacity:0.85;}
 }
 
 
