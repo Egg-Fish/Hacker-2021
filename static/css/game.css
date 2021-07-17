@@ -1,0 +1,65 @@
+#content{
+    /* animation: fadeInContent100 3s; */
+    opacity: 1;
+    height: 100%;
+    width: 100%;
+
+}
+
+.playerInfo{
+    position: fixed;
+    top: 50px;
+    left: 50px;
+    /* transform: translate(-50%, -50%); */
+
+    width: 20%;
+    height: 18%;
+    /* line-height: 200%; */
+
+    color: black;
+    background-color: white;
+
+    border-radius: 35px;
+    text-align: left;
+}
+
+.output{
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translate(-50%, 0);
+
+    width: 40%;
+    height: 65%;
+
+    padding: 30px;
+    border: 30px solid var(--gui-colour);
+
+    background-color: black;
+    overflow-y: scroll;
+}
+
+.input input{
+    position: fixed;
+    left: 50%;
+    bottom: 5%;
+    transform: translate(-50%, 0);
+    height: auto;
+    width: 60%;
+    border: 10px solid var(--gui-colour);
+    background-color: black;
+    color: white;
+    font-size: 20px;
+    border-radius: 5px;
+    padding: 10px;
+    outline: none;
+}
+
+span{
+    position: relative;
+    left: 50%;
+    top: 10%;
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
