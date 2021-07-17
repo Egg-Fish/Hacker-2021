@@ -26,6 +26,8 @@ The SocketController has a few ways of delivering outbound traffic:
     messages during the day.
 """
 from typing import List, Set, Dict, Tuple, Optional
+import logging
+import time
 
 from flask import Flask, request, session, render_template, redirect
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
@@ -37,7 +39,9 @@ class SocketController:
         self.clients = {} # dict[name: sid]
 
     def addClientToController(self, name:str, SID:str):
-        self.clients.update({name: SID})
+        # Add client entry as dict[<name>: <gamecode>/<SID>]
+        self.clients.update({name: f"{self.gamecode}/{SID}"})
+        logging.debug(f"User {name} has been added to the SocketController under {self.gamecode}/{SID}.")
 
     def sendMessagesToRoom(self, messages:List[str], room:str = "") -> None:
         # Defaults to sending to <gamecode> (a.k.a Players + Spectators)
@@ -60,4 +64,5 @@ class SocketController:
         # Sends to room <gamecode>/<SID>
         socketRoom = self.clients[name]
 
+        logging.debug(f"Sending data {data} of type {type(data)} under event {event} to client {name} under the socket room {socketRoom}.")
         self.socketio.emit(event, data, to=socketRoom)

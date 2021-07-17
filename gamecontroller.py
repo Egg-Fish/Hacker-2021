@@ -116,13 +116,13 @@ class GameController:
 
     def addPlayer(self, playerobj:Player):
         self.gameinstance.players.append(playerobj)
-        pass
+        logging.info(f"Added player {playerobj.getName()} to game {self.gamecode}")
 
     def removePlayer(self, playerName:str):
         playerobj = self.gameinstance.getPlayerFromName(playerName)
         if playerobj:
             self.gameinstance.players.remove(playerobj)
-        pass
+            logging.info(f"Removed player {playerName} to game {self.gamecode}")
 
     def handleMessage(self, playerName, data) -> int:
         # JS emits sent with the "message" event are handled here
@@ -132,6 +132,7 @@ class GameController:
         message = data
 
         if not playerobj:
+            logging.warning(f"Player {playerName} not found in game {self.gamecode}")
             return -1
 
         if self.isAllowedToSpeak(playerobj) and message[0] != '/':
@@ -166,9 +167,16 @@ class GameController:
         command = data.strip()
 
         if not playerobj and playerName != "GAMEMASTER":
+            logging.warning(f"Player {playerName} not found in game {self.gamecode}")
             return -1
 
         if command == "inWaitingRoom":
+            data = []
+
+            for player in self.gameinstance.getPlayers():
+                data.append(player.getName())
+
+            self.socketcontroller.sendDataToClient(data, playerName, "waitingRoomData")
             return
 
         if command == "inGameRoom":
