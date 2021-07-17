@@ -58,6 +58,7 @@ class SocketController:
         if not room:
             socketRoom = self.gamecode
 
+        logging.debug(f"Sending data {data} of type {type(data)} under event {event} to room {room} under the socket room {socketRoom}.")
         self.socketio.emit(event, data, to=socketRoom)
 
     def sendDataToClient(self, data, name:str, event:str="data") -> None:

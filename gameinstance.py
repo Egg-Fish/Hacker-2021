@@ -82,6 +82,9 @@ class GameInstance:
 
     def getGameStatus(self) -> int:
         return self.status
+    
+    def setGameStatus(self, status) -> None:
+        self.status = status
 
     def getWinner(self) -> int:
         return self.winner

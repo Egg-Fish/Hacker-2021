@@ -56,6 +56,16 @@ class Player:
     def setVoted(self):
         self.isVoted = True
 
+    def serialize(self):
+        data = {}
+
+        data["name"] = self.getName()
+        data["alias"] = self.getAlias()
+        data["role"] = self.getRole()
+        data["status"] = self.getStatus()
+
+        return data
+
 GAMEMASTER_PLAYER = Player("GAMEMASTER")
 GAMEMASTER_PLAYER.alias = "SYSTEM"
 

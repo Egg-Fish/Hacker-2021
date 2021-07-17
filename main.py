@@ -129,6 +129,13 @@ def joinGame():
 
     return redirect("/")
 
+@app.route("/gm/<gamecode>")
+def gamemasterScreen(gamecode):
+    session["name"] = "GAMEMASTER"
+    session["gamecode"] = gamecode
+
+    return render_template("gamemasterscreen.html")
+
 
 @socketio.on("connect")
 def connect():
@@ -137,7 +144,8 @@ def connect():
         gamecode = session["gamecode"]
         SID = generateSID()
 
-        join_room(f"testgame/{SID}")
+        join_room(f"{gamecode}/{SID}")
+        join_room(f"{gamecode}")
         GAMES[gamecode]["SocketController"].addClientToController(name, SID)
 
 @socketio.on("command")

@@ -58,6 +58,7 @@ class GameController:
 
     def startGame(self) -> None:
         # Players are not at game.html yet
+        self.gameinstance.setGameStatus(1)
         self.victims = []
         self.protected = []
         self.scanned = []
@@ -187,6 +188,15 @@ class GameController:
 
         if playerName == "GAMEMASTER":
             # Admin commands
+            if command == "inGamemasterRoom":
+                data = {"players": [], "status": self.gameinstance.getGameStatus()}
+
+                for player in self.gameinstance.getPlayers():
+                    data["players"].append(player.serialize())
+
+                self.socketcontroller.sendDataToClient(data, playerName, "gamemasterRoomData")
+                return
+
             if command == "startGame":
                 self.startGame()
                 return

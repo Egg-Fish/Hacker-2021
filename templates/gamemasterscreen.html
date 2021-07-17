@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/gamemasterscreen.css')}}">
+{% endblock %}
+
+{% block body %}
+<body>
+    <div id="content">
+        <h1 id="gamecode">Gamecode: testgame</h1>
+        <div class="players">
+            <!-- Add players to this div as such:-->
+
+            <!-- <div class="player">
+                <span>
+                    Name: Me 2<br>
+                    Alias: Lolllllllllllllllllllllllll<br>
+                    Role: Hacker<br>
+                    Status: online<br>
+                </span>
+            </div> -->
+
+        <!-- End Players -->
+        </div>
+        <button onClick="startGame()">SHINY</button>
+    </div>
+
+    <script defer>
+        inGamemasterRoom();
+    </script>
+</body>
+{% endblock %}
