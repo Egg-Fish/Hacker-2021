@@ -63,6 +63,12 @@ class GameController:
         self.protected = []
         self.scanned = []
 
+        self.gameinstance.hackers.clear()
+        self.gameinstance.whitehats.clear()
+        self.gameinstance.investigators.clear()
+        self.gameinstance.civilians.clear()
+        self.gameinstance.spectators.clear()
+
         self.finalVictim = None
 
         self.votes = {}
@@ -78,7 +84,7 @@ class GameController:
 
         self.gameinstance.resetAllPlayers()
 
-        # random.shuffle(self.gameinstance.players)
+        random.shuffle(self.gameinstance.players)
 
         for playerobj in self.gameinstance.players:
             if len(self.gameinstance.hackers) != self.gameinstance.maxHackers:
@@ -98,6 +104,10 @@ class GameController:
                 self.gameinstance.civilians.append(playerobj)
 
         # Add predefined messages here
+
+        # self.addMessageToAll(GAMEMASTER_PLAYER, "Welcome to Hacker 2021 by StrITwise!")
+
+        self.startNight()
 
         # Send reloadPage event to players. Game has started
 
@@ -142,23 +152,27 @@ class GameController:
             else:
                 self.addMessageToRole(playerobj, message)
 
+            for player in self.gameinstance.getPlayers():
+                self.handleCommand(player.getName(), "inGameRoom")
+
         elif self.isAllowedToSpeak(playerobj) and message[0] == '/':
             command, number = message.strip().split(maxsplit=1)
             if command in ["/v", "/vote"] and self.isDay:
                 self.voteAlias(playerobj, number)
-                return
+                
 
             if command in ["/t", "/target"]:
                 self.targetAlias(playerobj, number)
-                return
+                
 
             if command in ["/p", "/protect"]:
                 self.protectAlias(playerobj, number)
-                return
+                
 
             if command in ["/s", "/scan"]:
                 self.scanAlias(playerobj, number)
-                return
+                
+            self.updateGame()
         pass
 
     def handleCommand(self, playerName, data) -> int:
@@ -181,6 +195,19 @@ class GameController:
             return
 
         if command == "inGameRoom":
+            data = {
+                "playerInfo": [],
+                "messages": []
+            }
+
+            data["playerInfo"] = playerobj.serialize()
+            
+            if self.isDay:
+                data["messages"] = self.getMessages()
+            else:
+                data["messages"] = self.getMessagesForRole(playerobj.getRole())
+
+            self.socketcontroller.sendDataToClient(data, playerName, "gameRoomData")
             return
 
         if command == "inEndgameRoom":
@@ -213,7 +240,7 @@ class GameController:
         pass
 
     def authorMessage(self, playerobj:Player) -> str:
-        fs = "{}@{}: "
+        fs = "<b>{}@{}: </b>"
         if playerobj.getName() == "GAMEMASTER":
             return fs.format("GAMEMASTER", self.gamecode)
         if self.isDay:
@@ -222,14 +249,16 @@ class GameController:
             return fs.format("Anonymous", self.gamecode)
 
     def addMessage(self, playerobj, message):
-        message = self.authorMessage(playerobj) + message
+        message = self.authorMessage(playerobj) + message + "<br>"
+        logging.debug(f"Message [{message}] added.")
         self.messages.append(message)
 
     def addMessageToRole(self, playerobj:Player, message):
         # Uses the role found in playerobj
-        message = self.authorMessage(playerobj) + message
+        message = self.authorMessage(playerobj) + message + "<br>"
         playerRole = playerobj.getRole()
 
+        logging.debug(f"Message [{message}] added to {playerRole} chat.")
         if playerRole == "hacker":
             self.hackerMessages.append(message)
         elif playerRole == "whitehat":
@@ -243,7 +272,7 @@ class GameController:
 
     def addMessageToAll(self, playerobj:Player, message):
         # GAMEMASTER COMMAND
-        message = self.authorMessage(playerobj) + message
+        message = self.authorMessage(playerobj) + message + "<br>"
 
         self.hackerMessages.append(message)
         self.whitehatMessages.append(message)
@@ -270,9 +299,11 @@ class GameController:
         playerRole = playerobj.getRole()
 
         if playerRole == "spectator":
+            logging.debug(f"Player with role {playerRole} is not allowed to speak. (isDay = {self.isDay})")
             return False
 
         if playerobj.getStatus() != "online":
+            logging.debug(f"Player with role {playerRole} is not allowed to speak. (isDay = {self.isDay})")
             return False
 
         if self.isDay:
@@ -284,6 +315,7 @@ class GameController:
         if playerRole in ["hacker", "whitehat", "investigator"] and not self.isDay:
             return True
 
+        logging.debug(f"Player with role {playerRole} is not allowed to speak. (isDay = {self.isDay})") 
         return False
 
     def clearMessages(self, role="") -> None:
@@ -471,6 +503,8 @@ class GameController:
         self.clearMessages()
 
         self.isDay = False
+
+        self.addMessageToAll(GAMEMASTER_PLAYER, "The night has started. Good luck ppl!")
         pass
 
 
