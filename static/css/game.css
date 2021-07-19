@@ -1,5 +1,10 @@
+#background{
+    animation: fadeInContent85 2s;
+    opacity: 0.85;
+}
+
 #content{
-    /* animation: fadeInContent100 3s; */
+    animation: fadeInContent100 5s;
     opacity: 1;
     height: 100%;
     width: 100%;
