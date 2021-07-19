@@ -78,6 +78,8 @@ for i in range(1, 7):
     dummy = Player(f"test{i}")
     GAMES["testgame"]["GameController"].addPlayer(dummy)
 
+createGame("oriontestgame", socketio, maxHackers=2)
+
 @app.route("/test/addplayer")
 def testAddPlayer():
     dummy = Player(f"newplayer")
