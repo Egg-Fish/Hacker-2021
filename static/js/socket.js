@@ -58,3 +58,41 @@ socket.on("gamemasterRoomData", function(data){
 function startGame(){
     socket.emit("command", "startGame");
 }
+
+
+function inGameRoom() {
+    setTimeout(function () {
+        socket.emit("command", "inGameRoom");
+        inGameRoom();
+    }, 1000);
+}
+
+socket.on("gameRoomData", function(data){
+    console.log(data);
+    var playerInfo = document.getElementsByClassName("playerInfo")[0];
+
+    playerName = data["playerInfo"]["name"];
+    playerAlias = data["playerInfo"]["alias"];
+    playerRole = data["playerInfo"]["role"];
+    playerStatus = data["playerInfo"]["status"];
+
+    playerInfo.innerHTML = "<span>" +
+    "Name:" + playerName + "<br>" +
+    "Alias:" + playerAlias + "<br>" +
+    "Role:" + playerRole + "<br>" +
+    "Status:" + playerStatus + "<br>" +
+    "</span>";
+
+    var output = document.getElementById("output");
+    output.innerHTML = "";
+    
+    for (messageNo in data["messages"]){
+        message = data["messages"][messageNo];
+        output.innerHTML += message;
+    }
+});
+
+
+function sendMessage(message){
+    socket.emit("message", message);
+}

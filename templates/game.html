@@ -8,7 +8,7 @@
 {% block body %}
 <body>
     <video autoplay muted loop id="background">
-        <source src="{{url_for('static', filename='joinscreen.mp4')}}" type="video/mp4">
+        <source src="{{url_for('static', filename='gamescreen.m4v')}}" type="video/mp4">
     </video>
 
     <div id="content">
@@ -22,77 +22,33 @@
         </div>
 
         <div class="output" id="output">
+            <!-- Messages look like these -->
+            <!-- 
+
             <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
-            <b>Sender@testgame: </b> Message<br>
+            <b>Sender@testgame: </b> Message<br> 
+
+            -->
 
         </div>
         <!-- End of output -->
 
-        <div class="input" id="input">
-            <input type="text" placeholder="dalbert">
+        <div class="input">
+            <input type="text" id="input" placeholder="Type /h for more information">
         </div>
         
     </div>
+    <script defer>
+        var input = document.getElementById("input");
+
+        input.addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                sendMessage(input.value);
+                input.value = "";
+            }
+        });
+        inGameRoom();
+    </script>
 </body>
 {% endblock %}
