@@ -3,6 +3,8 @@
 Hacker is a web-based game that was created for the event, StrITwise 2021: Edge of Automation for Ngee Ann Polytechnic.
 Hacker was built using Flask, a python framework designed for fast deployment and scalability.
 
+![joinscreen](/screenshots/joinscreen.PNG?raw=true)
+
 ## Requirements
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install all the packages needed for the game.
 
