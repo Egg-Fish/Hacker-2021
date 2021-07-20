@@ -116,9 +116,9 @@ class GameController:
     def endGame(self) -> None:
         # Ask all players to refresh
         # Winner wouldve been set before this call
-        self.status = 2
+        self.gameinstance.setGameStatus(2)
         self.isDay = True
-        self.addMessage(CIVILIAN_PLAYER, f"AYO SOMEONE WON")
+        self.addMessage(CIVILIAN_PLAYER, "Scanning all players...")
 
         self.socketcontroller.sendDataToRoom("gameEnd", event="reloadPage")
 
@@ -335,6 +335,21 @@ class GameController:
             self.investigatorMessages.clear()
             self.civilianMessages.clear()
 
+    def showOnlinePlayers(self):
+        # Sends a list of online aliases
+        message = []
+        players = self.gameinstance.getOnlinePlayers()
+
+        message.append("<br>Current Online Members:")
+        for i in range(len(players)):
+            message.append(f"<i>{i+1}: {players[i].getAlias()}</i>")
+
+        msg = "<br>".join(message)
+
+        self.addMessageToAll(GAMEMASTER_PLAYER, msg)
+
+
+
     def targetAlias(self, playerobj:Player, number:str) -> int:
         # Note - Number is derived from the position of the
         # result of self.gameinstance.getOnlinePlayers()
@@ -505,28 +520,39 @@ class GameController:
         self.isDay = False
 
         self.addMessageToAll(GAMEMASTER_PLAYER, "The night has started. Good luck ppl!")
-        pass
+        self.showOnlinePlayers()
 
 
     def endNight(self) -> str:
         # Note - Will implement the messaging
         self.clearMessages()
+        self.finalVictim = None
+
+        if len(self.victims) == 0:
+            return
 
         self.finalVictim = random.choice(self.victims)
+
+        if len(self.protected) == 0:
+            # Hacked
+            self.finalVictim.setStatus("hacked")
+            return
 
         random.shuffle(self.protected)
         if self.finalVictim == self.protected[0]:
             # Protected
-            pass
+            self.finalVictim = None
+            return
         else:
             # Hacked
             self.finalVictim.setStatus("hacked")
+            return
 
 
     def startDay(self) -> None:
         self.isDay = True
 
-        if self.finalVictim == self.protected[0]:
+        if self.finalVictim == None:
             # Protected
             self.addMessage(CIVILIAN_PLAYER, "Nobody was hacked.")
             
@@ -534,6 +560,8 @@ class GameController:
             # Hacked
             self.addMessage(CIVILIAN_PLAYER, f"The player {self.finalVictim.getAlias()} has been hacked. The player can no longer communicate.")
             
+        self.showOnlinePlayers()
+
         self.votes = {}
         self.continues = {}
 
@@ -554,9 +582,6 @@ class GameController:
         self.addMessage(CIVILIAN_PLAYER, f"The player {finalVoteAlias} has been voted out. The player was a {playerobj.getRole()}")
 
         playerobj.setStatus("voted out")
-        
-            
-        
 
 
     def updateGame(self):
@@ -575,13 +600,13 @@ class GameController:
         nOnline = len(self.gameinstance.getOnlinePlayers())
         if nHackers == 0:
             # Players win
-            self.winner = 2
+            self.gameinstance.winner = 2
             self.endGame()
             return
 
         if nOnline - nHackers <= nHackers: 
             # If there are 2 online hackers, they win if 4 people are left.
-            self.winner = 1
+            self.gameinstance.winner = 1
             self.endGame()
 
 

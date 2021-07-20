@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{url_for('static', filename='css/endscreen.css')}}">
+{% endblock %}
+
+{% block body %}
+<body>
+    <video autoplay muted loop id="background">
+        <source src="{{url_for('static', filename='joinscreen.mp4')}}" type="video/mp4">
+    </video>
+
+    <div id="content">
+        {% if gi.getWinner() == 1 %}
+        <h1 id="header">The Hackers Have Won</h1>
+        {% elif gi.getWinner() == 2 %}
+        <h1 id="header">The Civilians Have Won</h1>
+        {% else %}
+        <h1 id="header">How Did You Get Here?</h1>
+        {% endif %}
+
+        <div id=players>
+            <div id="hackers">
+                <h3>Hackers:<br></h3>
+                {% for playerobj in gi.hackers %}
+                <span id={{playerobj.getStatus()}}>{{playerobj.getName()}}<br></span>
+                {% endfor %}
+            </div>
+            <div id="whitehats">
+                <h3>White Hats:<br></h3>
+                {% for playerobj in gi.whitehats %}
+                <span id={{playerobj.getStatus()}}>{{playerobj.getName()}}<br></span>
+                {% endfor %}
+            </div>
+            <div id="investigators">
+                <h3>Investigators:<br></h3>
+                {% for playerobj in gi.investigators %}
+                <span id={{playerobj.getStatus()}}>{{playerobj.getName()}}<br></span>
+                {% endfor %}
+            </div>
+            <div id="civilians">
+                <h3>Civilians:<br></h3>
+                {% for playerobj in gi.civilians %}
+                <span id={{playerobj.getStatus()}}>{{playerobj.getName()}}<br></span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

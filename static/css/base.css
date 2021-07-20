@@ -41,6 +41,12 @@ h2{
     font-weight: 300;
 }
 
+h3{
+    margin: 0px;
+    font-size: 40px;
+    font-weight: 600; 
+}
+
 #background{
     animation: fadeIn 2s;
     position: fixed;

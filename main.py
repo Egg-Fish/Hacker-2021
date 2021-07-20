@@ -71,6 +71,10 @@ def testRender(path):
     session["name"] = "test1"
     session["gamecode"] = "testgame"
 
+    if path == "endscreen.html":
+        GAMES["testgame"]["GameController"].startGame()
+        return render_template(path, gi=GAMES["testgame"]["GameInstance"])
+
     return render_template(path)
 
 createGame("testgame", socketio)
@@ -78,7 +82,7 @@ for i in range(1, 7):
     dummy = Player(f"test{i}")
     GAMES["testgame"]["GameController"].addPlayer(dummy)
 
-createGame("oriontestgame", socketio, maxHackers=2)
+createGame("oriontestgame", socketio)
 
 @app.route("/test/addplayer")
 def testAddPlayer():
@@ -111,7 +115,7 @@ def handleMain():
         elif gamestatus == 1:
             return render_template("game.html")
         elif gamestatus == 2:
-            return render_template("endscreen.html")
+            return render_template("endscreen.html", gi=GAMES[gamecode]["GameInstance"])
         else:
             logging.error(f"User {name} in gamecode {gamecode} with gamestatus = {gamestatus} did not load a page.")
             return "OOPS"
