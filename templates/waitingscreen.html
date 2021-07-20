@@ -1,24 +1,55 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block head %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/waitingscreen.css')}}">
-<script defer>
-    socket.emit("joinGameRoom");
-</script>
 {% endblock %}
 
-{% block content %}
-<div id="banner">Waiting for game to start</div>
-<div id="players">Players:<br></div>
+{% block body %}
+<body>
+    <video autoplay muted loop id="background">
+        <source src="{{url_for('static', filename='waitingscreen.mp4')}}" type="video/mp4">
+    </video>
+    <div id="content">
+        <h1>Players: </h1>
+        <div class="players">
+            <!-- Add players to this div as such:-->
 
-<script defer>
-    socket.on("newPlayer", function(players){
-        document.getElementById("players").innerText = "Players:\n";
+            <!-- <div class="player">
+                <span>Name</span>
+            </div> -->
 
-        for (playerName in players){
-            document.getElementById("players").innerText += playerName + "\n";
-        }
-    });
+            <div class="player">
+                <span>Me 2</span>
+            </div>
+            <div class="player">
+                <span>Me 3</span>
+            </div>
+            <div class="player">
+                <span>Me 4</span>
+            </div>
+            <div class="player">
+                <span>Me 5</span>
+            </div>
+            <div class="player">
+                <span>Me 6</span>
+            </div>
+            <div class="player">
+                <span>Me 7</span>
+            </div>
+            <div class="player">
+                <span>Me 8</span>
+            </div>
+            <div class="player">
+                <span>Me 9</span>
+            </div>
+            <div class="player">
+                <span>Me 10</span>
+            </div>
+        </div>
+    </div>
 
-</script>
+    <script defer>
+        inWaitingRoom();
+    </script>
+</body>
 {% endblock %}

@@ -1,50 +1,54 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block head %}
 <link rel="stylesheet" href="{{url_for('static', filename='css/game.css')}}">
 {% endblock %}
 
-{% block content %}
-<div id="playerData">
-    Name: <span id="playerName"></span><br>
-    Alias: <span id="playerAlias"></span><br>
-    Role: <span id="playerRole"></span><br>
-    Status: <span id="playerStatus"></span><br>
-</div>
-<div id="chatbox">
-    <div id = "output"></div>
-</div>
 
-<div id="inputField">
-    <input type="text" id="message">
-</div>
+{% block body %}
+<body>
+    <video autoplay muted loop id="background">
+        <source src="{{url_for('static', filename='gamescreen.m4v')}}" type="video/mp4">
+    </video>
 
-<div id="banner">
-    ORION 2021
-</div>
+    <div id="content">
+        <div class="playerInfo">
+            <span>
+            Name: name<br>
+            Alias: alias<br>
+            Role: role<br>
+            Status: status<br>
+            </span>
+        </div>
 
-<script defer>
-    socket.emit("getPlayerData");
-    socket.emit("joinGameRoom");
+        <div class="output" id="output">
+            <!-- Messages look like these -->
+            <!-- 
 
-    document.getElementById("message").addEventListener("keyup", function(event) {
-    // Number 13 is the "Enter" key on the keyboard
-    if (event.key === "Enter") {
-        // Cancel the default action, if needed
-        event.preventDefault();
+            <b>Sender@testgame: </b> Message<br>
+            <b>Sender@testgame: </b> Message<br> 
+
+            -->
+
+        </div>
+        <!-- End of output -->
+
+        <div class="input">
+            <input type="text" id="input" placeholder="Type /h for more information">
+        </div>
         
-        sendMessage();
-        getGameData();
-        }
+    </div>
+    <script defer>
+        var input = document.getElementById("input");
 
-    });
-
-    function loopPlayerData(){
-        socket.emit("getPlayerData");
-        setTimeout(loopPlayerData, 1000);
-    }
-
-    loopPlayerData();
-</script>
-
+        input.addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                sendMessage(input.value);
+                input.value = "";
+            }
+        });
+        inGameRoom();
+    </script>
+</body>
 {% endblock %}

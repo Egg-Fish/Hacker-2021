@@ -18,9 +18,57 @@ Blue : #1E48EF
     --node-blue: #1E48EF;
 }
 
+::-webkit-scrollbar{
+    -ms-scrollbar-base-color: #fff;
+}
+
 html
 {
-    background-color: var(--bg-colour);
+    background-color:black;
     font-family: 'Open Sans', sans-serif;
     color: white;
+}
+
+h1{
+    margin: 0px;
+    font-size: 100px;
+    font-style: bold;
+}
+
+h2{
+    margin: 0px;
+    font-size: 30px;
+    font-weight: 300;
+}
+
+h3{
+    margin: 0px;
+    font-size: 40px;
+    font-weight: 600; 
+}
+
+#background{
+    animation: fadeIn 2s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    0% {opacity:0;}
+    100% {opacity:1;}
+}
+
+@keyframes fadeInContent85 {
+    0% {opacity:0;}
+    30% {opacity:0;}
+    100% {opacity:0.85;}
+}
+
+@keyframes fadeInContent100 {
+    0% {opacity:0;}
+    30% {opacity:0;}
+    100% {opacity:1;}
 }

@@ -1,177 +1,98 @@
 var socket = io()
 
-function getGameData(){
-    socket.emit("getGameData");
+socket.on("reloadPage", function(data){
+    window.location.reload();
+});
+
+function inWaitingRoom() {
+    setTimeout(function () {
+        socket.emit("command", "inWaitingRoom");
+        inWaitingRoom();
+    }, 1000);
 }
 
-socket.on("gameData", function(data){
-    for (const [key, value] of Object.entries(data)) {
-        console.log(key, value);
+socket.on("waitingRoomData", function(data){
+    var players = document.getElementsByClassName("players")[0];
+    players.innerHTML = "";
+
+    for (playerName in data){
+        const d = document.createElement("div");
+        d.className = "player";
+
+        d.innerHTML = "<span>" + data[playerName] + "</span>";
+
+        players.appendChild(d);
+    }
+});
+
+function inGamemasterRoom() {
+    setTimeout(function () {
+        socket.emit("command", "inGamemasterRoom");
+        inGamemasterRoom();
+    }, 1000);
+}
+
+socket.on("gamemasterRoomData", function(data){
+    var players = document.getElementsByClassName("players")[0];
+    players.innerHTML = "";
+
+    for (player in data["players"]){
+        const d = document.createElement("div");
+        d.className = "player";
+
+        playerName = data["players"][player]["name"];
+        playerAlias = data["players"][player]["alias"];
+        playerRole = data["players"][player]["role"];
+        playerStatus = data["players"][player]["status"];
+
+        d.innerHTML = "<span>" + 
+            "Name: "+ playerName + "<br>" +
+            "Alias: "+ playerAlias + "<br>" +
+            "Role: "+ playerRole + "<br>" +
+            "Status: "+ playerStatus + "</span>";
+
+        players.appendChild(d);
     }
 });
 
 function startGame(){
-    alert("Starting game for all participants...");
-    socket.emit("startGame");
-    setTimeout(() => {socket.emit("startHackers");}, 2000);
+    socket.emit("command", "startGame");
 }
 
-socket.on('startGame', function(){
-    window.location = "/";
-});
 
-socket.on("playerData", function(data){
-    var name = data["name"];
-    var alias = data["alias"];
-    var role = data["role"];
-    var status = data["status"];
-
-    var nameElement = document.getElementById("playerName");
-    var aliasElement = document.getElementById("playerAlias");
-    var roleElement = document.getElementById("playerRole");
-    var statusElement = document.getElementById("playerStatus");
-
-    nameElement.innerHTML = name;
-    aliasElement.innerHTML = alias;
-    roleElement.innerHTML = role;
-    statusElement.innerHTML = status;
-})
-
-function messagePlayers(){
-    var message = document.getElementById("message").value;
-    document.getElementById("message").value = "";
-    socket.emit("alertRoom", {"message": message, "room": "player"})
+function inGameRoom() {
+    setTimeout(function () {
+        socket.emit("command", "inGameRoom");
+        inGameRoom();
+    }, 1000);
 }
 
-function messageHackers(){
-    var message = document.getElementById("message").value;
-    document.getElementById("message").value = "";
-    socket.emit("alertRoom", {"message": message, "room": "hacker"})
-}
-
-function messageWhitehats(){
-    var message = document.getElementById("message").value;
-    document.getElementById("message").value = "";
-    socket.emit("alertRoom", {"message": message, "room": "whitehat"})
-}
-
-function messageInvestigators(){
-    var message = document.getElementById("message").value;
-    document.getElementById("message").value = "";
-    socket.emit("alertRoom", {"message": message, "room": "investigator"});
-}
-
-socket.on("alertMessage", function(msg){
-    var message = msg["message"];
-    alert(message);
-});
-
-function sendMessage(){
-    var message = document.getElementById("message").value;
-    document.getElementById("message").value = "";
-    socket.emit("sendMessage", {"message": message});
-}
-
-socket.on("message", function(data){
-    var sender = data["sender"];
-    var message = data["message"];
-
-    document.getElementById("output").innerHTML += sender + ": " + message + "<br>";
-});
-
-function getRoundData(){
-    socket.emit("getRoundData");
-}
-
-socket.on("roundData", function(data){
-    for (const [key, value] of Object.entries(data)) {
-        console.log(key, value);
-    }
-    // document.getElementById("output").innerText += data["nProtections"] + "\n";
-});
-
-socket.on("endGame", function(data){
-    window.location = "/"; // Reload page
-});
-
-socket.on("endGameData", function(data){ // For the endgame screen only
-    var hackers = data["hackers"];
-    var whitehats = data["whitehats"];
-    var investigators = data["investigators"];
-    var civilians = data["civilians"];
-
-    var banner = data["winner"];
-
-    if (banner == 0){
-        document.getElementById("banner").innerText = "HOW DID YOU GET HERE?";
-    }
-
-    else if (banner == 1){
-        document.getElementById("banner").innerText = "Hackers have won!";
-    }
-
-    else if (banner == 2){
-        document.getElementById("banner").innerText = "Civilians have won!";
-    }
-
+socket.on("gameRoomData", function(data){
     console.log(data);
+    var playerInfo = document.getElementsByClassName("playerInfo")[0];
 
-    for (h in hackers){
-        console.log(hackers[h]["name"]);
-        document.getElementById("hackers").innerText += hackers[h]["name"] + "\n";
-    }
-    for (w in whitehats){
-        console.log(whitehats[w]["name"]);
-        document.getElementById("whitehats").innerText += whitehats[w]["name"] + "\n";
-    }
-    for (i in investigators){
-        console.log(investigators[i]["name"]);
-        document.getElementById("investigators").innerText += investigators[i]["name"] + "\n";
-    }
-    for (c in civilians){
-        console.log(civilians[c]["name"]);
-        document.getElementById("civilians").innerText += civilians[c]["name"] + "\n";
-    }
-});
+    playerName = data["playerInfo"]["name"];
+    playerAlias = data["playerInfo"]["alias"];
+    playerRole = data["playerInfo"]["role"];
+    playerStatus = data["playerInfo"]["status"];
 
-function clearChat(){
-    socket.emit("clearChat");
-}
+    playerInfo.innerHTML = "<span>" +
+    "Name:" + playerName + "<br>" +
+    "Alias:" + playerAlias + "<br>" +
+    "Role:" + playerRole + "<br>" +
+    "Status:" + playerStatus + "<br>" +
+    "</span>";
 
-socket.on("clearChat", function(){
-    document.getElementById("output").innerText = "";
-    document.getElementById("output").innerHTML = "";
-});
-
-
-function startHackers(){
-    socket.emit("startHackers");
-}
-
-function startWhitehats(){
-    socket.emit("startWhitehats");
-}
-
-function startInvestigators(){
-    socket.emit("startInvestigators");
-}
-
-function startCivilians(){
-    socket.emit("startCivilians");
-}
-
-socket.on("gameData_gm", function(data){
-    document.getElementById("gamecode").innerText = "Game Code: " + data["gamecode"];
-    console.log(data);
-
-    playerHTML = document.getElementById("players");
-
-    playerHTML.innerText = "Players:\n"
-    for (playerName in data["players"]){
-        playerData = data["players"][playerName];
-        playerHTML.innerText += "Name: " + playerName + "\n";
-        playerHTML.innerText += "Alias: " + playerData["alias"] + "\n";
-        playerHTML.innerText += "Role: " + playerData["role"] + "\n";
-        playerHTML.innerText += "Status: " + playerData["status"] + "\n\n";
+    var output = document.getElementById("output");
+    output.innerHTML = "";
+    
+    for (messageNo in data["messages"]){
+        message = data["messages"][messageNo];
+        output.innerHTML += message;
     }
 });
+
+
+function sendMessage(message){
+    socket.emit("message", message);
+}

@@ -1,0 +1,43 @@
+body{
+    background-color: var(--bg-colour)
+}
+
+#content{
+    text-align: center;
+}
+
+#content h1{
+    font-size: 75px;
+    margin-bottom: 50px;
+}
+
+.players{
+    opacity: 1;
+    display: grid;
+    grid-row-gap: 20px;
+    grid-column-gap: 10px;
+    grid-template-columns: auto auto;
+    height: 60%;
+    width: 70%;
+    overflow-y: scroll;
+    margin: auto;
+}
+
+.player{
+    opacity: 1;
+    background-color: white;
+    color: black;
+    margin: auto;
+    padding-top: 10px;
+    width: 90%;
+    height: 120px;
+    /* line-height: 50px; */
+    text-align: center;
+    border-radius: 50px;
+}
+
+span{
+    margin-top: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
