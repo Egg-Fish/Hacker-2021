@@ -1,6 +1,6 @@
 # Hacker - StrITwise 2021: Edge of Automation
 
-Hacker is a web-based game that was created for the event, StrITwise 2021: Edge of Automation for Ngee Ann Polytechnic.
+Hacker is a web-based game that was created for the event, StrITwise 2021: Edge of Automation by Ngee Ann Polytechnic.
 Hacker was built using Flask, a python framework designed for fast deployment and scalability.
 
 ![joinscreen](/screenshots/joinscreen.PNG?raw=true)
