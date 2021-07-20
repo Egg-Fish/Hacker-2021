@@ -1,4 +1,9 @@
 """
+Hacker - StrITwise 2021: Edge of Automation
+Hacker is a web-based game that was created for the event, 
+StrITwise 2021: Edge of Automation for Ngee Ann Polytechnic.
+Copyright (C) 2021 Eugenio Manansala, Richard Pamintuan, Wong Chao Hao
+
 This file is part of Hacker.
 
 Hacker is free software: you can redistribute it and/or modify
