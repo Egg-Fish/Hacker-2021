@@ -44,6 +44,7 @@ GAMES = {}
     }]
 """
 
+os.system("mkdir logs")
 logging.basicConfig(
     filename=f"logs/{int(time.time())}.log", 
     filemode="w+", 
