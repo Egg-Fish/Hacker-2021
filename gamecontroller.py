@@ -180,8 +180,7 @@ class GameController:
         elif self.isAllowedToSpeak(playerobj) and message[0] == '/':
             command, number = message.strip().split(maxsplit=1)
             if command in ["/v", "/vote"] and self.isDay:
-                self.voteAlias(playerobj, number)
-                
+                self.voteAlias(playerobj, number)   
 
             if command in ["/t", "/target"]:
                 self.targetAlias(playerobj, number)
@@ -193,8 +192,9 @@ class GameController:
 
             if command in ["/s", "/scan"]:
                 self.scanAlias(playerobj, number)
-                
+
             self.updateGame()
+                
         pass
 
     def handleCommand(self, playerName, data) -> int:
@@ -581,6 +581,13 @@ class GameController:
         else:
             # Hacked
             self.addMessage(CIVILIAN_PLAYER, f"The player {self.finalVictim.getAlias()} has been hacked. The player can no longer communicate.")
+        
+        if len(self.gameinstance.getOnlinePlayersFromRole("investigator")) == 0:
+            self.addMessage(CIVILIAN_PLAYER, f"The investigator is no longer in the game.")
+        elif len(self.scanned) > 0:
+            self.addMessage(CIVILIAN_PLAYER, f"The player scanned by the investigator was a {self.scanned[0].getRole()}.")
+        elif len(self.scanned) == 0:
+            self.addMessage(CIVILIAN_PLAYER, f"The investigator has chosen to scan noone.")
             
         self.showOnlinePlayers()
 
