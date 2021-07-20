@@ -174,5 +174,8 @@ def handleMessageToGameController(data):
 
 
 if __name__=="__main__":
-    socketio.run(app=app, host="0.0.0.0", port=80, debug=True)
+    host = sys.argv[1]
+    port = sys.argv[2]
+
+    socketio.run(app=app, host=host, port=port, debug=False)
     pass
