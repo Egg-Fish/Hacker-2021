@@ -21,5 +21,3 @@ To clear the logs, use
 ```bash
 ./clear_logs
 ```
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
