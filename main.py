@@ -178,21 +178,23 @@ def connect():
 
 @socketio.on("command")
 def handleCommandToGameController(data):
-    name = session["name"]
-    gamecode = session["gamecode"]
-    command = data
+    if "gamecode" in session:
+        name = session["name"]
+        gamecode = session["gamecode"]
+        command = data
 
-    logging.debug(f"Received command {command} from name {name} in game code {gamecode}")
-    GAMES[gamecode]["GameController"].handleCommand(name, data)
+        logging.debug(f"Received command {command} from name {name} in game code {gamecode}")
+        GAMES[gamecode]["GameController"].handleCommand(name, data)
     
 @socketio.on("message")
 def handleMessageToGameController(data):
-    name = session["name"]
-    gamecode = session["gamecode"]
-    message = data
+    if "gamecode" in session:
+        name = session["name"]
+        gamecode = session["gamecode"]
+        message = data
 
-    logging.debug(f"Received message {message} from name {name} in game code {gamecode}")
-    GAMES[gamecode]["GameController"].handleMessage(name, message)
+        logging.debug(f"Received message {message} from name {name} in game code {gamecode}")
+        GAMES[gamecode]["GameController"].handleMessage(name, message)
 
 
 if __name__=="__main__":
