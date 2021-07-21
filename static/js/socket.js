@@ -67,6 +67,18 @@ function inGameRoom() {
     }, 1000);
 }
 
+// sleep time expects milliseconds
+function sleep (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+  }
+  
+// // Usage!
+// sleep(500).then(() => {
+//     // Do something after the sleep!
+// });
+
+prevGameStatus = false;
+
 socket.on("gameRoomData", function(data){
     console.log(data);
     var playerInfo = document.getElementsByClassName("playerInfo")[0];
@@ -76,6 +88,8 @@ socket.on("gameRoomData", function(data){
     playerRole = data["playerInfo"]["role"];
     playerStatus = data["playerInfo"]["status"];
 
+    currentGameStatus = data["status"];
+
     playerInfo.innerHTML = "<img src='/static/usericon.png'>" + 
     "<span>" +
     "Name:" + playerName + "<br>" +
@@ -84,12 +98,46 @@ socket.on("gameRoomData", function(data){
     "Status:" + playerStatus + "<br>" +
     "</span>";
 
-    var output = document.getElementById("output");
-    output.innerHTML = "";
+    if (currentGameStatus != prevGameStatus){
+        // transition html to black
+        document.getElementsByTagName("body")[0].className = "blacked";
+        setTimeout(() => document.getElementsByTagName("body")[0].className = "", 2000);
+        setTimeout(function(){
+            var output = document.getElementById("output");
+            output.innerHTML = "";
+            
+            for (messageNo in data["messages"]){
+                message = data["messages"][messageNo];
+                output.innerHTML += message;
+            }
+            
+            var video = document.getElementById('background');
+            if (currentGameStatus != prevGameStatus){
+                if(currentGameStatus == true){ // day
+                    document.getElementById('background').innerHTML = '<source src="/static/day.m4v" type="video/mp4">'
+                    video.load();
+                    video.play();
+                }
+                else{
+                    document.getElementById('background').innerHTML = '<source src="/static/night.m4v" type="video/mp4">'
+                    video.load();
+                    video.play();
+                }
     
-    for (messageNo in data["messages"]){
-        message = data["messages"][messageNo];
-        output.innerHTML += message;
+                prevGameStatus = data["status"];
+            }
+        }, 1000);
+        
+    }
+
+    else{
+        var output = document.getElementById("output");
+        output.innerHTML = "";
+        
+        for (messageNo in data["messages"]){
+            message = data["messages"][messageNo];
+            output.innerHTML += message;
+        }
     }
 });
 

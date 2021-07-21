@@ -1,3 +1,12 @@
+body{
+    opacity: 1;
+    transition: all 1s;
+}
+
+body.blacked{
+    opacity: 0;
+}
+
 #background{
     animation: fadeInContent85 2s;
     opacity: 0.85;

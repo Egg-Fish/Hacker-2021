@@ -219,7 +219,8 @@ class GameController:
         if command == "inGameRoom":
             data = {
                 "playerInfo": [],
-                "messages": []
+                "messages": [],
+                "status": self.isDay
             }
 
             data["playerInfo"] = playerobj.serialize()
@@ -537,11 +538,17 @@ class GameController:
         self.votes = {}
         self.continues = {}
 
-        self.clearMessages()
+        # self.clearMessages() # The endDay logic will show the voted person
 
         self.isDay = False
 
-        self.addMessageToAll(GAMEMASTER_PLAYER, "The night has started. Good luck ppl!")
+        self.addMessageToAll(GAMEMASTER_PLAYER, "The night has started.")
+        self.addMessageToRole(HACKER_PLAYER, "You are a hacker. Type /t <number> to add a player to your list of victims. You can only target as much as there are hackers online in the round.")
+        self.addMessageToRole(WHITEHAT_PLAYER, "You are a white hat. Type /p <number> to protect a player from being hacked. You can only protect as much as there are whitehats online in the round.")
+        self.addMessageToRole(INVESTIGATOR_PLAYER, "You are an investigator. Type /s <number> to reveal the role of a player. Can only be used once per round.")
+        self.addMessageToRole(CIVILIAN_PLAYER, "You are a civilian. Enjoy a cup of tea while the night goes on.")
+
+        
         self.showOnlinePlayers()
 
 
@@ -608,7 +615,7 @@ class GameController:
 
         playerobj = self.gameinstance.getPlayerFromAlias(finalVoteAlias)
 
-        self.addMessage(CIVILIAN_PLAYER, f"The player {finalVoteAlias} has been voted out. The player was a {playerobj.getRole()}")
+        self.addMessageToAll(GAMEMASTER_PLAYER, f"The player {finalVoteAlias} has been voted out. The player was a {playerobj.getRole()}")
 
         playerobj.setStatus("voted out")
 
