@@ -124,3 +124,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 static/_nightscreen.mp4
+static/_dayscreen.mp4

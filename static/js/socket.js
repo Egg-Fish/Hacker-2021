@@ -76,7 +76,8 @@ socket.on("gameRoomData", function(data){
     playerRole = data["playerInfo"]["role"];
     playerStatus = data["playerInfo"]["status"];
 
-    playerInfo.innerHTML = "<span>" +
+    playerInfo.innerHTML = "<img src='/static/usericon.png'>" + 
+    "<span>" +
     "Name:" + playerName + "<br>" +
     "Alias:" + playerAlias + "<br>" +
     "Role:" + playerRole + "<br>" +

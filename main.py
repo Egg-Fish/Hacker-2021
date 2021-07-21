@@ -201,5 +201,5 @@ if __name__=="__main__":
     host = sys.argv[1]
     port = sys.argv[2]
 
-    socketio.run(app=app, host=host, port=port, debug=False)
+    socketio.run(app=app, host=host, port=port, debug=True)
     pass
