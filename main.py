@@ -122,6 +122,10 @@ def testRemovePlayer():
 def sendSocketLibrary():
     return send_file("socket/socket.io.js")
 
+@app.route("/favicon.ico")
+def favicon():
+    return send_file("favicons/favicon.ico")
+
 @app.route("/")
 def handleMain():
     if not "gamecode" in session:
